@@ -1,0 +1,48 @@
+# .NET
+bin/
+obj/
+*.user
+*.suo
+.vs/
+*.DotSettings.user
+launchSettings.json
+
+# EF Core migrations (keep Migrations/ folder, ignore snapshots if desired)
+# Uncomment if you want to ignore the snapshot:
+# **/Migrations/*ModelSnapshot.cs
+
+# Test results
+TestResults/
+*.trx
+*.coverage
+*.coveragexml
+
+# NuGet
+*.nupkg
+*.snupkg
+.nuget/
+
+# Angular / Node
+node_modules/
+dist/
+.angular/
+*.js.map
+
+# Environment / secrets
+.env
+.env.*
+!.env.example
+appsettings.Development.json
+appsettings.Local.json
+
+# Docker
+.dockerignore
+
+# OS
+.DS_Store
+Thumbs.db
+
+# IDE
+.idea/
+*.swp
+*.swo
