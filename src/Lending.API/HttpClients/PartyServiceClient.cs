@@ -10,7 +10,7 @@ public sealed class PartyServiceClient : IPartyServiceClient {
 	}
 
 	public async Task<PartyDto?> GetByIdAsync(Guid id, CancellationToken ct) {
-		var response = await _httpClient.GetAsync($"/api/party/{id}", ct);
+		var response = await _httpClient.GetAsync($"/api/parties/{id}", ct);
 		if (response.StatusCode == System.Net.HttpStatusCode.NotFound)
 			return null;
 		response.EnsureSuccessStatusCode();
