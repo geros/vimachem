@@ -37,7 +37,7 @@ public sealed class PartyService : IPartyService {
 	}
 
 	public async Task<PartyResponse> CreateAsync(CreatePartyRequest request, CancellationToken ct) {
-		var party = new Party(request.FirstName, request.LastName, request.Email);
+		var party = new Domain.Party(request.FirstName, request.LastName, request.Email);
 
 		_context.Parties.Add(party);
 		await _context.SaveChangesAsync(ct);
@@ -116,7 +116,8 @@ public sealed class PartyService : IPartyService {
 			.FirstOrDefaultAsync(p => p.Id == partyId, ct)
 			?? throw new NotFoundException("Party", partyId);
 
-		party.AssignRole(roleType);
+		var role = party.AssignRole(roleType);
+		_context.PartyRoles.Add(role);
 		await _context.SaveChangesAsync(ct);
 
 		await _publisher.PublishAsync(new IntegrationEvent {
@@ -160,7 +161,7 @@ public sealed class PartyService : IPartyService {
 		return MapToResponse(party);
 	}
 
-	private static PartyResponse MapToResponse(Party party) {
+	private static PartyResponse MapToResponse(Domain.Party party) {
 		return new PartyResponse {
 			Id = party.Id,
 			FirstName = party.FirstName,

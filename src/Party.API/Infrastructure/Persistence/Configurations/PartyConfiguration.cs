@@ -1,11 +1,11 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
-using Party.API.Domain;
+using DomainParty = Party.API.Domain.Party;
 
 namespace Party.API.Infrastructure.Persistence.Configurations;
 
-public class PartyConfiguration : IEntityTypeConfiguration<Party> {
-	public void Configure(EntityTypeBuilder<Party> builder) {
+public class PartyConfiguration : IEntityTypeConfiguration<DomainParty> {
+	public void Configure(EntityTypeBuilder<DomainParty> builder) {
 		builder.HasKey(p => p.Id);
 
 		builder.Property(p => p.FirstName)
@@ -25,7 +25,7 @@ public class PartyConfiguration : IEntityTypeConfiguration<Party> {
 			.HasForeignKey(r => r.PartyId)
 			.OnDelete(DeleteBehavior.Cascade);
 
-		builder.Navigation(p => p.Roles)
-			.UsePropertyAccessMode(PropertyAccessMode.Field);
+		builder.Metadata.FindNavigation(nameof(DomainParty.Roles))
+			?.SetPropertyAccessMode(PropertyAccessMode.Field);
 	}
 }

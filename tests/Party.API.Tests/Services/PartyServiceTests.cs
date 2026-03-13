@@ -4,6 +4,7 @@ using Moq;
 using Party.API.Application.DTOs;
 using Party.API.Application.Interfaces;
 using Party.API.Application.Services;
+using DomainParty = Party.API.Domain.Party;
 using Party.API.Domain;
 using Party.API.Domain.Exceptions;
 using Party.API.Infrastructure.Persistence;
@@ -56,7 +57,7 @@ public sealed class PartyServiceTests : IDisposable {
 
 	[Fact]
 	public async Task GetByIdAsync_WhenExists_ShouldReturnParty() {
-		var party = new Party("Test", "User", "test@test.com");
+		var party = new DomainParty("Test", "User", "test@test.com");
 		_context.Parties.Add(party);
 		await _context.SaveChangesAsync();
 
@@ -70,8 +71,8 @@ public sealed class PartyServiceTests : IDisposable {
 	[Fact]
 	public async Task GetAllAsync_ShouldReturnAllParties() {
 		_context.Parties.AddRange(
-			new Party("User1", "Test", "user1@test.com"),
-			new Party("User2", "Test", "user2@test.com")
+			new DomainParty("User1", "Test", "user1@test.com"),
+			new DomainParty("User2", "Test", "user2@test.com")
 		);
 		await _context.SaveChangesAsync();
 
@@ -82,9 +83,10 @@ public sealed class PartyServiceTests : IDisposable {
 
 	[Fact]
 	public async Task AssignRoleAsync_ShouldAddRoleAndPublish() {
-		var party = new Party("Test", "User", "test@test.com");
+		var party = new DomainParty("Test", "User", "test@test.com");
 		_context.Parties.Add(party);
 		await _context.SaveChangesAsync();
+		_context.ChangeTracker.Clear(); // Detach all entities for fresh load
 
 		var result = await _service.AssignRoleAsync(
 			party.Id, RoleType.Customer, CancellationToken.None);
@@ -97,7 +99,7 @@ public sealed class PartyServiceTests : IDisposable {
 
 	[Fact]
 	public async Task DeleteAsync_ShouldRemoveAndPublish() {
-		var party = new Party("Test", "User", "test@test.com");
+		var party = new DomainParty("Test", "User", "test@test.com");
 		_context.Parties.Add(party);
 		await _context.SaveChangesAsync();
 
@@ -111,7 +113,7 @@ public sealed class PartyServiceTests : IDisposable {
 
 	[Fact]
 	public async Task UpdateAsync_ShouldUpdateAndPublish() {
-		var party = new Party("Old", "Name", "old@test.com");
+		var party = new DomainParty("Old", "Name", "old@test.com");
 		_context.Parties.Add(party);
 		await _context.SaveChangesAsync();
 
@@ -128,7 +130,7 @@ public sealed class PartyServiceTests : IDisposable {
 
 	[Fact]
 	public async Task RemoveRoleAsync_ShouldRemoveAndPublish() {
-		var party = new Party("Test", "User", "test@test.com");
+		var party = new DomainParty("Test", "User", "test@test.com");
 		party.AssignRole(RoleType.Customer);
 		_context.Parties.Add(party);
 		await _context.SaveChangesAsync();
@@ -150,7 +152,7 @@ public sealed class PartyServiceTests : IDisposable {
 
 	[Fact]
 	public async Task AssignRoleAsync_WhenDuplicate_ShouldThrow() {
-		var party = new Party("Test", "User", "test@test.com");
+		var party = new DomainParty("Test", "User", "test@test.com");
 		party.AssignRole(RoleType.Customer);
 		_context.Parties.Add(party);
 		await _context.SaveChangesAsync();

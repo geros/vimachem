@@ -1,4 +1,5 @@
 using FluentAssertions;
+using DomainParty = Party.API.Domain.Party;
 using Party.API.Domain;
 using Party.API.Domain.Exceptions;
 using Xunit;
@@ -8,7 +9,7 @@ namespace Party.API.Tests.Domain;
 public sealed class PartyTests {
 	[Fact]
 	public void AssignRole_WhenNew_ShouldAddRole() {
-		var party = new Party("John", "Doe", "john@test.com");
+		var party = new DomainParty("John", "Doe", "john@test.com");
 
 		party.AssignRole(RoleType.Customer);
 
@@ -18,7 +19,7 @@ public sealed class PartyTests {
 
 	[Fact]
 	public void AssignRole_WhenDuplicate_ShouldThrow() {
-		var party = new Party("John", "Doe", "john@test.com");
+		var party = new DomainParty("John", "Doe", "john@test.com");
 		party.AssignRole(RoleType.Author);
 
 		var act = () => party.AssignRole(RoleType.Author);
@@ -29,7 +30,7 @@ public sealed class PartyTests {
 
 	[Fact]
 	public void RemoveRole_WhenExists_ShouldRemove() {
-		var party = new Party("John", "Doe", "john@test.com");
+		var party = new DomainParty("John", "Doe", "john@test.com");
 		party.AssignRole(RoleType.Customer);
 
 		party.RemoveRole(RoleType.Customer);
@@ -40,7 +41,7 @@ public sealed class PartyTests {
 
 	[Fact]
 	public void RemoveRole_WhenMissing_ShouldThrow() {
-		var party = new Party("John", "Doe", "john@test.com");
+		var party = new DomainParty("John", "Doe", "john@test.com");
 
 		var act = () => party.RemoveRole(RoleType.Author);
 
@@ -50,7 +51,7 @@ public sealed class PartyTests {
 
 	[Fact]
 	public void AssignBothRoles_ShouldAllowDualRole() {
-		var party = new Party("Stephen", "King", "king@test.com");
+		var party = new DomainParty("Stephen", "King", "king@test.com");
 
 		party.AssignRole(RoleType.Author);
 		party.AssignRole(RoleType.Customer);
@@ -62,7 +63,7 @@ public sealed class PartyTests {
 
 	[Fact]
 	public void Update_ShouldSetUpdatedAt() {
-		var party = new Party("John", "Doe", "john@test.com");
+		var party = new DomainParty("John", "Doe", "john@test.com");
 		party.UpdatedAt.Should().BeNull();
 
 		party.Update("Jane", "Doe", "jane@test.com");
@@ -73,7 +74,7 @@ public sealed class PartyTests {
 
 	[Fact]
 	public void Constructor_ShouldSetProperties() {
-		var party = new Party("George", "Orwell", "orwell@test.com");
+		var party = new DomainParty("George", "Orwell", "orwell@test.com");
 
 		party.FirstName.Should().Be("George");
 		party.LastName.Should().Be("Orwell");
@@ -84,7 +85,7 @@ public sealed class PartyTests {
 
 	[Fact]
 	public void HasRole_WhenNoRoles_ShouldReturnFalse() {
-		var party = new Party("John", "Doe", "john@test.com");
+		var party = new DomainParty("John", "Doe", "john@test.com");
 
 		party.HasRole(RoleType.Author).Should().BeFalse();
 		party.HasRole(RoleType.Customer).Should().BeFalse();
@@ -92,7 +93,7 @@ public sealed class PartyTests {
 
 	[Fact]
 	public void Update_ShouldUpdateAllFields() {
-		var party = new Party("John", "Doe", "john@test.com");
+		var party = new DomainParty("John", "Doe", "john@test.com");
 
 		party.Update("Jane", "Smith", "jane@new.com");
 

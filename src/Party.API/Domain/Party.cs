@@ -28,10 +28,12 @@ public class Party {
 		UpdatedAt = DateTime.UtcNow;
 	}
 
-	public void AssignRole(RoleType roleType) {
+	public PartyRole AssignRole(RoleType roleType) {
 		if (_roles.Any(r => r.RoleType == roleType))
 			throw new DomainException($"Party already has role {roleType}");
-		_roles.Add(new PartyRole(Id, roleType));
+		var role = new PartyRole(Id, roleType);
+		_roles.Add(role);
+		return role;
 	}
 
 	public void RemoveRole(RoleType roleType) {
