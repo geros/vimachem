@@ -11,7 +11,7 @@ public sealed class RabbitMqEventConsumer : BackgroundService {
 	private readonly ILogger<RabbitMqEventConsumer> _logger;
 	private readonly IConfiguration _config;
 	private IConnection? _connection;
-	private IModel? _channel;
+	private IChannel? _channel;
 
 	private const string ExchangeName = "library.events";
 	private const string QueueName = "audit.events";
@@ -36,30 +36,29 @@ public sealed class RabbitMqEventConsumer : BackgroundService {
 			HostName = _config["RabbitMQ:Host"] ?? "rabbitmq",
 			Port = int.Parse(_config["RabbitMQ:Port"] ?? "5672"),
 			UserName = _config["RabbitMQ:Username"] ?? "guest",
-			Password = _config["RabbitMQ:Password"] ?? "guest",
-			DispatchConsumersAsync = true // required for async consumers
+			Password = _config["RabbitMQ:Password"] ?? "guest"
 		};
 
-		_connection = factory.CreateConnection();
-		_channel = _connection.CreateModel();
+		_connection = await factory.CreateConnectionAsync(stoppingToken);
+		_channel = await _connection.CreateChannelAsync(cancellationToken: stoppingToken);
 
 		// Dead Letter Exchange + Queue
-		_channel.ExchangeDeclare(DeadLetterExchange, ExchangeType.Fanout, durable: true);
-		_channel.QueueDeclare(DeadLetterQueue, durable: true, exclusive: false, autoDelete: false);
-		_channel.QueueBind(DeadLetterQueue, DeadLetterExchange, "");
+		await _channel.ExchangeDeclareAsync(DeadLetterExchange, ExchangeType.Fanout, durable: true, cancellationToken: stoppingToken);
+		await _channel.QueueDeclareAsync(DeadLetterQueue, durable: true, exclusive: false, autoDelete: false, cancellationToken: stoppingToken);
+		await _channel.QueueBindAsync(DeadLetterQueue, DeadLetterExchange, "", cancellationToken: stoppingToken);
 
 		// Main queue with DLX
-		_channel.ExchangeDeclare(ExchangeName, ExchangeType.Topic, durable: true);
-		_channel.QueueDeclare(QueueName, durable: true, exclusive: false, autoDelete: false,
-			arguments: new Dictionary<string, object> {
+		await _channel.ExchangeDeclareAsync(ExchangeName, ExchangeType.Topic, durable: true, cancellationToken: stoppingToken);
+		await _channel.QueueDeclareAsync(QueueName, durable: true, exclusive: false, autoDelete: false,
+			arguments: new Dictionary<string, object?> {
 				{ "x-dead-letter-exchange", DeadLetterExchange }
-			});
-		_channel.QueueBind(QueueName, ExchangeName, "#"); // subscribe to ALL events
+			}, cancellationToken: stoppingToken);
+		await _channel.QueueBindAsync(QueueName, ExchangeName, "#", cancellationToken: stoppingToken); // subscribe to ALL events
 
-		_channel.BasicQos(prefetchSize: 0, prefetchCount: 10, global: false);
+		await _channel.BasicQosAsync(prefetchSize: 0, prefetchCount: 10, global: false, cancellationToken: stoppingToken);
 
 		var consumer = new AsyncEventingBasicConsumer(_channel);
-		consumer.Received += async (_, ea) => {
+		consumer.ReceivedAsync += async (_, ea) => {
 			var retryCount = GetRetryCount(ea.BasicProperties);
 
 			try {
@@ -81,7 +80,7 @@ public sealed class RabbitMqEventConsumer : BackgroundService {
 					Timestamp = @event.Timestamp
 				});
 
-				_channel.BasicAck(ea.DeliveryTag, multiple: false);
+				await _channel.BasicAckAsync(ea.DeliveryTag, multiple: false);
 				_logger.LogInformation("Processed event {EventType}", @event.EventType);
 
 			} catch (Exception ex) when (retryCount < MaxRetries) {
@@ -89,28 +88,29 @@ public sealed class RabbitMqEventConsumer : BackgroundService {
 					"Event processing failed (attempt {Attempt}/{Max}). Requeueing...",
 					retryCount + 1, MaxRetries);
 
-				var properties = _channel.CreateBasicProperties();
-				properties.Headers = new Dictionary<string, object> {
-					{ "x-retry-count", retryCount + 1 }
+				var properties = new BasicProperties {
+					Headers = new Dictionary<string, object?> {
+						{ "x-retry-count", retryCount + 1 }
+					},
+					Persistent = true
 				};
-				properties.Persistent = true;
 
-				_channel.BasicPublish(ExchangeName, ea.RoutingKey, properties, ea.Body);
-				_channel.BasicAck(ea.DeliveryTag, multiple: false);
+				await _channel.BasicPublishAsync(ExchangeName, ea.RoutingKey, false, properties, ea.Body);
+				await _channel.BasicAckAsync(ea.DeliveryTag, multiple: false);
 
 			} catch (Exception ex) {
 				_logger.LogError(ex,
 					"Event processing failed after {Max} retries. Sending to DLQ.", MaxRetries);
-				_channel.BasicNack(ea.DeliveryTag, multiple: false, requeue: false);
+				await _channel.BasicNackAsync(ea.DeliveryTag, multiple: false, requeue: false);
 			}
 		};
 
-		_channel.BasicConsume(queue: QueueName, autoAck: false, consumer: consumer);
+		await _channel.BasicConsumeAsync(queue: QueueName, autoAck: false, consumer: consumer, cancellationToken: stoppingToken);
 		await Task.Delay(Timeout.Infinite, stoppingToken);
 	}
 
-	private static int GetRetryCount(IBasicProperties properties) {
-		if (properties.Headers?.TryGetValue("x-retry-count", out var value) == true)
+	private static int GetRetryCount(IReadOnlyBasicProperties properties) {
+		if (properties.Headers?.TryGetValue("x-retry-count", out var value) == true && value != null)
 			return Convert.ToInt32(value);
 		return 0;
 	}
@@ -119,9 +119,9 @@ public sealed class RabbitMqEventConsumer : BackgroundService {
 		var retries = 0;
 		while (retries < 10 && !ct.IsCancellationRequested) {
 			try {
-				using var testConnection = new ConnectionFactory {
+				await using var testConnection = await new ConnectionFactory {
 					HostName = _config["RabbitMQ:Host"] ?? "rabbitmq"
-				}.CreateConnection();
+				}.CreateConnectionAsync(ct);
 				_logger.LogInformation("Connected to RabbitMQ");
 				return;
 			} catch {
