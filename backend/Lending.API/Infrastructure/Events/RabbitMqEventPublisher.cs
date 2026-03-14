@@ -4,9 +4,9 @@ using Shared.Events;
 
 namespace Lending.API.Infrastructure.Events;
 
-public sealed class RabbitMqEventPublisher : IEventPublisher, IDisposable {
+public sealed class RabbitMqEventPublisher : IEventPublisher, IAsyncDisposable {
 	private readonly IConnection _connection;
-	private readonly IModel _channel;
+	private readonly IChannel _channel;
 	private const string ExchangeName = "library.events";
 
 	public RabbitMqEventPublisher(IConfiguration config) {
@@ -17,30 +17,24 @@ public sealed class RabbitMqEventPublisher : IEventPublisher, IDisposable {
 			Password = config["RabbitMQ:Password"] ?? "guest"
 		};
 
-		_connection = factory.CreateConnection();
-		_channel = _connection.CreateModel();
-		_channel.ExchangeDeclare(ExchangeName, ExchangeType.Topic, durable: true);
+		_connection = factory.CreateConnectionAsync().GetAwaiter().GetResult();
+		_channel = _connection.CreateChannelAsync().GetAwaiter().GetResult();
+		_channel.ExchangeDeclareAsync(ExchangeName, ExchangeType.Topic, durable: true).GetAwaiter().GetResult();
 	}
 
-	public Task PublishAsync(IntegrationEvent integrationEvent, CancellationToken ct) {
+	public async Task PublishAsync(IntegrationEvent integrationEvent, CancellationToken ct) {
 		var routingKey = $"{integrationEvent.EntityType.ToLowerInvariant()}.{integrationEvent.Action.ToLowerInvariant()}";
 		var body = JsonSerializer.SerializeToUtf8Bytes(integrationEvent);
 
-		var properties = _channel.CreateBasicProperties();
-		properties.ContentType = "application/json";
-		properties.DeliveryMode = 2; // persistent
-
-		_channel.BasicPublish(
+		await _channel.BasicPublishAsync(
 			exchange: ExchangeName,
 			routingKey: routingKey,
-			basicProperties: properties,
-			body: body);
-
-		return Task.CompletedTask;
+			body: body,
+			cancellationToken: ct);
 	}
 
-	public void Dispose() {
-		_channel.Close();
-		_connection.Close();
+	public async ValueTask DisposeAsync() {
+		if (_channel != null) await _channel.DisposeAsync();
+		if (_connection != null) await _connection.DisposeAsync();
 	}
 }
