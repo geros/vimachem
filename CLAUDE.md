@@ -127,6 +127,96 @@ docs: update README with architecture diagram
    - Add validation for duplicate party names
    ```
 
+## Team Workflow with Git Worktrees
+
+### Overview
+For parallel work across multiple services, use a **Lead Agent + Service Agents** model with isolated worktrees.
+
+### Agent Roles
+
+**Lead Agent:**
+- Coordinates service agents
+- Handles rebasing and merging when agents complete work
+- Removes worktrees after successful merges
+- Reports final status
+
+**Service Agents (one per service):**
+- Work in isolated worktrees on feature branches
+- Enrich tests/implement features for their assigned service
+- Commit using Conventional Commits format
+- Notify lead upon completion
+
+### Workflow Steps
+
+1. **Create feature branches per service:**
+   ```bash
+   git checkout -b feature/extreme-tests-audit
+   git checkout -b feature/extreme-tests-catalog
+   git checkout -b feature/extreme-tests-lending
+   git checkout -b feature/extreme-tests-party
+   ```
+
+2. **Service agents work in worktrees** (isolated mode):
+   - Each agent works on their service's feature branch
+   - Regular commits with focused, atomic changes
+   - Push commits to their feature branch
+
+3. **Lead rebases each branch:**
+   ```bash
+   git checkout feature/extreme-tests-{service}
+   git fetch origin
+   git rebase origin/master
+   ```
+
+4. **Lead merges with --no-ff:**
+   ```bash
+   git checkout master
+   git merge --no-ff feature/extreme-tests-{service} -m "Merge feature/extreme-tests-{service}
+
+   - Add extreme scenario tests for edge cases
+   - Add boundary condition tests
+   - Add stress and concurrency tests"
+   ```
+
+5. **Lead cleans up worktrees** after all merges:
+   ```bash
+   git worktree remove .claude/worktrees/feature/extreme-tests-{service}
+   ```
+
+### Commit Message Format for Team Work
+
+**Service agent commits:**
+```
+test(audit-api): add extreme scenario tests for event repository
+
+- Empty collection and null input handling
+- Concurrent event processing (1000 threads)
+- Database connection failure scenarios
+```
+
+**Lead merge commits:**
+```
+Merge feature/extreme-tests-audit
+
+- Add 96 extreme scenario tests for event repository
+- Add retention job stress tests for millions of events
+- Add RabbitMQ consumer edge case tests
+- Add controller boundary and pagination tests
+```
+
+### Example: Extreme Test Scenario Teams
+
+This workflow was successfully used to add 400+ extreme scenario tests across all services:
+
+| Service | Tests Added | Files Modified |
+|---------|-------------|----------------|
+| Audit.API | 96 | 4 new test files |
+| Catalog.API | 50+ | 4 existing files |
+| Lending.API | 51 | 2 existing files |
+| Party.API | 214 | 3 new test files |
+
+All tests passed with 0 failures. Some tests skipped for InMemory database limitations (would pass with PostgreSQL).
+
 ## Project Structure
 
 ```
