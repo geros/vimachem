@@ -29,6 +29,8 @@ public class Party {
 	}
 
 	public PartyRole AssignRole(RoleType roleType) {
+		if (!IsValidRoleType(roleType))
+			throw new DomainException("This role does not exist. Valid roles are: Author (0) or Customer (1)");
 		if (_roles.Any(r => r.RoleType == roleType))
 			throw new DomainException($"Party already has role {roleType}");
 		var role = new PartyRole(Id, roleType);
@@ -37,10 +39,16 @@ public class Party {
 	}
 
 	public void RemoveRole(RoleType roleType) {
+		if (!IsValidRoleType(roleType))
+			throw new DomainException("This role does not exist. Valid roles are: Author (0) or Customer (1)");
 		var role = _roles.FirstOrDefault(r => r.RoleType == roleType)
 			?? throw new DomainException($"Party does not have role {roleType}");
 		_roles.Remove(role);
 	}
 
 	public bool HasRole(RoleType roleType) => _roles.Any(r => r.RoleType == roleType);
+
+	private static bool IsValidRoleType(RoleType roleType) {
+		return roleType is RoleType.Author or RoleType.Customer;
+	}
 }
