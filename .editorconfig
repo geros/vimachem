@@ -9,7 +9,14 @@ charset = utf-8
 trim_trailing_whitespace = true
 insert_final_newline = true
 
+
+
 [*.cs]
+# Require braces for all control statements (if, for, while, etc.)
+# Remove 'control_blocks' from the list or set it explicitly
+csharp_new_line_before_open_brace = methods,types,properties,indexers,events,anonymous_types,local_functions,accessors,lambdas
+csharp_prefer_braces = true:warning
+
 # Same-line braces (K&R / Java style)
 csharp_new_line_before_open_brace = none
 csharp_new_line_before_else = false
