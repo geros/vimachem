@@ -20,7 +20,7 @@
 	</ItemGroup>
 
 	<ItemGroup>
-		<ProjectReference Include="../../src/Lending.API/Lending.API.csproj" />
+		<ProjectReference Include="../../backend/Lending.API/Lending.API.csproj" />
 	</ItemGroup>
 
 </Project>

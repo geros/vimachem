@@ -1,3 +1,7 @@
 <Solution>
-  <Project Path="src/Shared/Shared.csproj" />
+  <Project Path="backend/Shared/Shared.csproj" />
+  <Project Path="backend/Party.API/Party.API.csproj" />
+  <Project Path="backend/Catalog.API/Catalog.API.csproj" />
+  <Project Path="backend/Lending.API/Lending.API.csproj" />
+  <Project Path="backend/Audit.API/Audit.API.csproj" />
 </Solution>

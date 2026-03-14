@@ -97,11 +97,11 @@ case "$1" in
   migrate)
     echo -e "${BLUE}Running EF Core migrations...${NC}"
     echo "  → Party.API"
-    cd src/Party.API && dotnet ef database update && cd ../..
+    cd backend/Party.API && dotnet ef database update && cd ../..
     echo "  → Catalog.API"
-    cd src/Catalog.API && dotnet ef database update && cd ../..
+    cd backend/Catalog.API && dotnet ef database update && cd ../..
     echo "  → Lending.API"
-    cd src/Lending.API && dotnet ef database update && cd ../..
+    cd backend/Lending.API && dotnet ef database update && cd ../..
     echo -e "${GREEN}✓ All migrations applied.${NC}"
     ;;
 

@@ -24,7 +24,7 @@
 	</ItemGroup>
 
 	<ItemGroup>
-		<ProjectReference Include="../../src/Audit.API/Audit.API.csproj" />
+		<ProjectReference Include="../../backend/Audit.API/Audit.API.csproj" />
 	</ItemGroup>
 
 </Project>

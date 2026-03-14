@@ -4,11 +4,11 @@ EXPOSE 8080
 
 FROM mcr.microsoft.com/dotnet/sdk:10.0 AS build
 WORKDIR /src
-COPY ["src/Catalog.API/Catalog.API.csproj", "src/Catalog.API/"]
-COPY ["src/Shared/Shared.csproj", "src/Shared/"]
-RUN dotnet restore "src/Catalog.API/Catalog.API.csproj"
+COPY ["backend/Catalog.API/Catalog.API.csproj", "backend/Catalog.API/"]
+COPY ["backend/Shared/Shared.csproj", "backend/Shared/"]
+RUN dotnet restore "backend/Catalog.API/Catalog.API.csproj"
 COPY . .
-WORKDIR "/src/src/Catalog.API"
+WORKDIR "/src/backend/Catalog.API"
 RUN dotnet build "Catalog.API.csproj" -c Release -o /app/build
 
 FROM build AS publish

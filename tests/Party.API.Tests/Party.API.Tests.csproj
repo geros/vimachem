@@ -17,7 +17,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="../../src/Party.API/Party.API.csproj" />
+    <ProjectReference Include="../../backend/Party.API/Party.API.csproj" />
   </ItemGroup>
 
 </Project>

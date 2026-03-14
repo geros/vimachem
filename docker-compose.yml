@@ -51,7 +51,7 @@ services:
   party-api:
     build:
       context: .
-      dockerfile: src/Party.API/Dockerfile
+      dockerfile: backend/Party.API/Dockerfile
     ports:
       - "5100:8080"
     environment:
@@ -71,7 +71,7 @@ services:
   audit-api:
     build:
       context: .
-      dockerfile: src/Audit.API/Dockerfile
+      dockerfile: backend/Audit.API/Dockerfile
     ports:
       - "5400:8080"
     environment:
@@ -93,7 +93,7 @@ services:
   catalog-api:
     build:
       context: .
-      dockerfile: src/Catalog.API/Dockerfile
+      dockerfile: backend/Catalog.API/Dockerfile
     ports:
       - "5200:8080"
     environment:
@@ -117,7 +117,7 @@ services:
   lending-api:
     build:
       context: .
-      dockerfile: src/Lending.API/Dockerfile
+      dockerfile: backend/Lending.API/Dockerfile
     ports:
       - "5300:8080"
     environment:
