@@ -80,6 +80,53 @@ fix(catalog-api): handle null author in book creation
 docs: update README with architecture diagram
 ```
 
+## Git Workflow
+
+### Commit Practices
+- **All work must be committed** using Conventional Commits format
+- Commit frequently with focused, atomic changes
+- Each commit should represent a single logical change
+- Write clear, descriptive commit messages that explain the "why" not just the "what"
+- Use body for additional context when needed (separate from subject with blank line)
+- Reference issues/PRs in footer when applicable
+
+### Commit Message Format
+```
+<type>(<scope>): <subject>
+
+<body>
+
+<footer>
+```
+
+### Best Practices
+- Keep subject line under 72 characters
+- Use imperative mood in subject ("add" not "added", "fix" not "fixed")
+- Do not end subject with a period
+- Separate subject from body with a blank line
+- Explain what and why in body, not how (code shows how)
+
+### Feature Branch Workflow
+1. **Rebase feature branches** onto the target branch before merging:
+   ```bash
+   git checkout feature/my-feature
+   git fetch origin
+   git rebase origin/main
+   ```
+2. **Merge with --no-ff** (no fast-forward) to preserve branch history:
+   ```bash
+   git checkout main
+   git merge --no-ff feature/my-feature
+   ```
+3. **Write descriptive merge commit messages** summarizing the feature:
+   ```
+   Merge feature/party-role-management
+
+   - Add Party aggregate root with role-based access control
+   - Implement CRUD operations for Party management
+   - Add validation for duplicate party names
+   ```
+
 ## Project Structure
 
 ```
