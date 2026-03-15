@@ -66,11 +66,22 @@ A microservices-based Library Management System built with .NET 10, PostgreSQL, 
 ### Run with Docker Compose
 
 ```bash
-# Start all services
-make up
+# Start all services (works on any OS)
+docker-compose up -d --build
 
-# Or using the dev script
-./scripts/dev.sh up
+# Stop all services
+docker-compose down
+
+# Stop and remove volumes
+docker-compose down -v
+```
+
+On Linux/Mac you can also use the convenience scripts:
+
+```bash
+make up          # Start all services
+make down        # Stop all services
+make clean       # Stop and remove volumes
 ```
 
 Services will be available at:
@@ -78,30 +89,20 @@ Services will be available at:
 - Catalog.API: http://localhost:5200/swagger
 - Lending.API: http://localhost:5300/swagger
 - Audit.API: http://localhost:5400/swagger
+- Documentation: http://localhost:8000
 - RabbitMQ Management: http://localhost:15672 (guest/guest)
 
 ### Run Tests
 
 ```bash
 # Run all unit tests
-make test
-
-# Or individually
 dotnet test tests/Party.API.Tests/
 dotnet test tests/Catalog.API.Tests/
 dotnet test tests/Lending.API.Tests/
 dotnet test tests/Audit.API.Tests/
 ```
 
-### Smoke & E2E Tests
-
-```bash
-# Quick health check
-make smoke
-
-# Full end-to-end borrow/return flow
-make e2e
-```
+On Linux/Mac: `make test` runs all tests at once.
 
 ## Development Commands
 
