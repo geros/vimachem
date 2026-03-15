@@ -12,7 +12,7 @@ import {
   Divider,
 } from '@mui/material'
 import { ArrowBack as ArrowBackIcon } from '@mui/icons-material'
-import { useParty, useCreateParty, useUpdateParty } from '@/hooks/useParties'
+import { useParty, useCreateParty, useUpdateParty, useAssignRole, useRemoveRole } from '@/hooks/useParties'
 import { LoadingSkeleton } from '@/components/shared/LoadingSkeleton'
 import { useToast } from '@/context/ToastContext'
 import { RoleType } from '@/types/party'
@@ -26,6 +26,8 @@ const PartyForm: React.FC = () => {
   const { data: party, isLoading: partyLoading } = useParty(id || '')
   const createMutation = useCreateParty()
   const updateMutation = useUpdateParty()
+  const assignRoleMutation = useAssignRole()
+  const removeRoleMutation = useRemoveRole()
 
   const [formData, setFormData] = useState({
     firstName: '',
@@ -68,9 +70,28 @@ const PartyForm: React.FC = () => {
     try {
       if (isEditing) {
         await updateMutation.mutateAsync({ id: id!, data: formData })
+        const originalRoles = party?.roles.map((r) =>
+          r === 'Author' ? RoleType.Author : RoleType.Customer
+        ) ?? []
+        const rolesToAdd = roles.filter((r) => !originalRoles.includes(r))
+        const rolesToRemove = originalRoles.filter((r) => !roles.includes(r))
+        await Promise.all([
+          ...rolesToAdd.map((roleType) =>
+            assignRoleMutation.mutateAsync({ id: id!, data: { roleType } })
+          ),
+          ...rolesToRemove.map((roleType) =>
+            removeRoleMutation.mutateAsync({ id: id!, roleType })
+          ),
+        ])
         showSuccess('Party updated successfully')
       } else {
-        await createMutation.mutateAsync(formData)
+        const created = await createMutation.mutateAsync(formData)
+        const partyId = created.data.id
+        await Promise.all(
+          roles.map((roleType) =>
+            assignRoleMutation.mutateAsync({ id: partyId, data: { roleType } })
+          )
+        )
         showSuccess('Party created successfully')
       }
       navigate('/parties')
@@ -182,7 +203,7 @@ const PartyForm: React.FC = () => {
             <Button
               type="submit"
               variant="contained"
-              disabled={createMutation.isPending || updateMutation.isPending}
+              disabled={createMutation.isPending || updateMutation.isPending || assignRoleMutation.isPending || removeRoleMutation.isPending}
             >
               {isEditing ? 'Update' : 'Create'}
             </Button>

@@ -23,6 +23,7 @@ export const AppLayout: React.FC = () => {
           flexGrow: 1,
           p: 3,
           width: { sm: `calc(100% - ${drawerWidth}px)` },
+          ml: { sm: `${drawerWidth}px` },
           backgroundColor: '#F5F7FA',
           minHeight: '100vh',
         }}
