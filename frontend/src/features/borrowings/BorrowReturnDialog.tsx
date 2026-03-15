@@ -34,7 +34,7 @@ const BorrowReturnDialog: React.FC<BorrowReturnDialogProps> = ({
   const [activeTab, setActiveTab] = useState(initialTab)
   const [selectedBook, setSelectedBook] = useState<{ id: string; title: string; available: number } | null>(null)
   const [selectedCustomer, setSelectedCustomer] = useState<{ id: string; name: string } | null>(null)
-  const [selectedReturn, setSelectedReturn] = useState<{ bookId: string; customerId: string; bookTitle: string; customerName: string } | null>(null)
+  const [selectedReturn, setSelectedReturn] = useState<{ bookId: string; customerId: string; bookTitle: string; customerName: string; borrowedAt: string } | null>(null)
 
   const { data: books } = useBooks()
   const { data: parties } = useParties()
@@ -73,7 +73,7 @@ const BorrowReturnDialog: React.FC<BorrowReturnDialogProps> = ({
     try {
       await returnMutation.mutateAsync({
         bookId: selectedReturn.bookId,
-        request: { customerId: selectedReturn.customerId },
+        data: { customerId: selectedReturn.customerId },
       })
       showSuccess('Book returned successfully')
       handleClose()
@@ -172,6 +172,7 @@ const BorrowReturnDialog: React.FC<BorrowReturnDialogProps> = ({
                     customerId: newValue.customerId,
                     bookTitle: newValue.bookTitle,
                     customerName: newValue.customerName,
+                    borrowedAt: newValue.borrowedAt,
                   })
                 } else {
                   setSelectedReturn(null)

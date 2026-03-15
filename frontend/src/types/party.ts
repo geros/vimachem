@@ -1,7 +1,9 @@
-export enum RoleType {
-  Author = 0,
-  Customer = 1,
-}
+export const RoleType = {
+  Author: 0,
+  Customer: 1,
+} as const
+
+export type RoleType = typeof RoleType[keyof typeof RoleType]
 
 export interface Party {
   id: string

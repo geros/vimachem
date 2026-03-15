@@ -1,4 +1,4 @@
-import axios, { AxiosError, AxiosInstance } from 'axios'
+import axios, { AxiosError, type AxiosInstance } from 'axios'
 
 const createClient = (baseURL: string): AxiosInstance => {
   const client = axios.create({

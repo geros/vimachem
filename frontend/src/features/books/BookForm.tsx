@@ -15,7 +15,6 @@ import { useCategories } from '@/hooks/useCategories'
 import { useParties } from '@/hooks/useParties'
 import { LoadingSkeleton } from '@/components/shared/LoadingSkeleton'
 import { useToast } from '@/context/ToastContext'
-import { RoleType } from '@/types/party'
 
 const BookForm: React.FC = () => {
   const { id } = useParams()

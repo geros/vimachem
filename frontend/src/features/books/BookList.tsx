@@ -21,7 +21,6 @@ import {
   Delete as DeleteIcon,
 } from '@mui/icons-material'
 import { useBooks, useDeleteBook } from '@/hooks/useBooks'
-import { useCategories } from '@/hooks/useCategories'
 import { LoadingSkeleton } from '@/components/shared/LoadingSkeleton'
 import { EmptyState } from '@/components/shared/EmptyState'
 import { ConfirmDialog } from '@/components/shared/ConfirmDialog'
@@ -31,7 +30,6 @@ import type { Book } from '@/types/book'
 const BookList: React.FC = () => {
   const navigate = useNavigate()
   const { data: books, isLoading } = useBooks()
-  const { data: categories } = useCategories()
   const deleteMutation = useDeleteBook()
   const { showSuccess, showError } = useToast()
   const [searchTerm, setSearchTerm] = useState('')
