@@ -1,189 +1,98 @@
 # Assignment Requirements
 
-This page documents the original requirements provided for the Library Management System interview assignment.
+This page documents the original requirements provided for the Library Management System interview assignment (Version 3.0).
 
-## Functional Requirements
+## Scope
 
-### 1. Party Management
+Design and implement a Library Management System that will be used by a librarian to manage parties, customers and authors, books, and their reservations.
 
-The system must manage people (parties) who interact with the library.
+The system should be implemented using .NET (latest LTS). The system must follow SOLID principles, be containerized, and support event-driven communication.
 
-#### Requirements:
-- Create, read, update, delete parties
-- Each party has: name, email
-- Assign roles to parties: **Author** and/or **Customer**
-- A party can have multiple roles (e.g., both Author and Customer)
-- Email addresses must be unique
+## Section 1
 
-#### Business Rules:
-- Name cannot be empty
-- Email must be valid format
-- Only parties with Author role can be book authors
-- Only parties with Customer role can borrow books
+The librarian should be able to perform the following actions:
 
-### 2. Catalog Management
+- Manage parties and their roles
+- Add books on behalf of Authors
+- Manage book reservations on behalf of Customers
 
-The system must manage the library's book catalog.
+### Functional Requirements
 
-#### Requirements:
-- Create, read, update, delete books
-- Each book has: title, ISBN, author, category, total copies
-- Track available copies for lending
-- Manage book categories
-- Search books by title
+#### Parties & Role Management
 
-#### Business Rules:
-- ISBN must be unique
-- Author must exist in Party system with Author role
-- Total copies must be >= 0
-- Available copies cannot exceed total copies
-- Available copies cannot be negative
+- CRUD parties
+- CRUD roles:
+    - Author
+    - Customer
+- A party can belong to both roles
 
-### 3. Lending Operations
+#### Book & Category Management
 
-The system must support book borrowing and returns.
+- CRUD books
+- CRUD categories:
+    - Fiction
+    - Mystery
+- Track book availability:
+    - By ID
+    - By Title
+- Support borrowing and returning books
+- A book copy can be borrowed by only one Customer at a time
 
-#### Requirements:
-- Borrow a book (customer + book)
-- Return a borrowed book
-- View currently borrowed books
-- View borrowing history by customer
-- View borrowing history by book
+#### Borrowing Visibility
 
-#### Business Rules:
-- Customer must exist with Customer role
-- Book must have available copies
-- Customer cannot borrow same book twice simultaneously
-- Due date is 14 days from borrow date
-- Return must match active borrowing record
+- The system must be able to return:
+    - A list of book titles along with the Customers who have currently borrowed them
 
-### 4. Audit Trail
+### Technical Requirements
 
-The system must maintain an audit trail of all activities.
+- Apply Microservice architecture
+- Use a relational database for transactional data
+- Add initial data
+- Ensure clear domain ownership
+- Include unit tests
+- All components must be containerized
+- Provide a docker-compose setup
 
-#### Requirements:
-- Record all state changes as events
-- Store events for 90 days
-- Query events by entity type, action, date range
-- View event history for specific party or book
+## Section 2
 
-#### Event Types:
-- PartyCreated, PartyUpdated
-- RoleAssigned, RoleRemoved
-- BookCreated, BookUpdated, BookDeleted
-- BookBorrowed, BookReturned
+The librarian should be able to retrieve events regarding a book, a party, or a reservation.
 
-## Non-Functional Requirements
+Extend the system to support asynchronous communication, auditing, background processing, and scalable read models.
 
-### Architecture
+### Functional Requirements
 
-- **Microservices**: Four separate services with clear boundaries
-- **Database per Service**: Each service owns its data
-- **Event-Driven**: Async messaging for cross-service communication
-- **API Gateway**: Not required, direct service access acceptable
+#### Event Publishing
 
-### Technology Stack
+- All actions must be published as events
+- Events should include at least:
+    - Entity identifiers
+    - Action type
+    - Timestamp
 
-- **Backend**: .NET 8+ (used .NET 10)
-- **Databases**: PostgreSQL (relational), MongoDB (events)
-- **Message Broker**: RabbitMQ
-- **Containerization**: Docker, Docker Compose
-- **Testing**: Unit and integration tests
+#### Event History
 
-### API Design
+- Persist events for querying and auditing
+- Expose read-only endpoints to:
+    - Retrieve user-related events
+    - Retrieve book-related events
+- Responses must be paginated
 
-- RESTful APIs
-- JSON request/response format
-- Proper HTTP status codes
-- Swagger/OpenAPI documentation
-- Consistent error responses
+#### Data Retention
 
-### Data Consistency
+- Events older than 1 year must be deleted automatically
+- The cleanup logic must be isolated from request handling
 
-- Strong consistency within services (ACID transactions)
-- Eventual consistency for cross-service data (via events)
-- Denormalized data acceptable for read optimization
+### Technical Requirements
 
-### Resilience
-
-- Retry logic for transient failures
-- Circuit breaker for external service calls
-- Graceful degradation where possible
-
-## Constraints
-
-### Time Constraints
-
-- Assignment to be completed within one week
-- Focus on core functionality over edge cases
-- Documentation should be concise but complete
-
-### Scope Constraints
-
-- No authentication/authorization required
-- No frontend required (but bonus if included)
-- No production deployment required
-- No CI/CD pipeline required
-
-### Technical Constraints
-
-- Use provided technology stack
-- Follow C# coding conventions
-- Use Entity Framework Core for PostgreSQL
-- Use MongoDB driver for events
-- Use RabbitMQ.Client for messaging
+- Use RabbitMQ
+- Use a non-relational database for event storage
+- Apply retry and error-handling strategies for message processing
 
 ## Deliverables
 
-### Code
-
-- Complete source code in Git repository
-- Clean commit history
-- README with setup instructions
-- Docker Compose configuration
-
-### Documentation
-
-- API documentation (Swagger)
-- Architecture overview
-- Setup instructions
-- Design decisions explained
-
-### Tests
-
-- Unit tests for domain logic
-- Integration tests for API endpoints
-- Test coverage report (optional)
-
-## Bonus Points
-
-Additional features that demonstrate advanced skills:
-
-- [x] Frontend application (React + Vite)
-- [x] Comprehensive test coverage
-- [x] Pagination for list endpoints
-- [x] Event filtering and querying
-- [x] Data retention policies
-- [x] Health checks
-- [x] Resilience patterns (Polly)
-- [x] Docker multi-stage builds
-- [x] Makefile for common tasks
-- [x] Conventional commits
-
-## Evaluation Rubric
-
-| Category | Criteria | Points |
-|----------|----------|--------|
-| **Functionality** | All requirements implemented | 30 |
-| | Correct business logic | 15 |
-| **Architecture** | Clean service boundaries | 15 |
-| | Proper use of patterns | 10 |
-| **Code Quality** | Readable and maintainable | 10 |
-| | Proper error handling | 5 |
-| **Testing** | Unit tests | 5 |
-| | Integration tests | 5 |
-| **Documentation** | Clear README | 3 |
-| | API documentation | 2 |
-| **Bonus** | Additional features | +10 |
-
-**Total**: 100 points (+10 bonus)
+- Source code (GitHub repository)
+- docker-compose.yml
+- README including:
+    - How to run the system
+    - Architecture overview
+    - Describe decisions and trade-offs
