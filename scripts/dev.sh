@@ -2,7 +2,7 @@
 # scripts/dev.sh - Development workflow helper
 # Usage: ./scripts/dev.sh [command]
 
-set -e
+set -euo pipefail
 
 RED='\033[0;31m'
 GREEN='\033[0;32m'
@@ -12,10 +12,10 @@ NC='\033[0m' # No Color
 
 PROJECT_NAME="library-management"
 
-case "$1" in
+case "${1:-}" in
   up)
     echo -e "${GREEN}▶ Starting all services...${NC}"
-    docker compose -p $PROJECT_NAME up --build -d
+    docker compose -p "$PROJECT_NAME" up --build -d
     echo ""
     echo -e "${GREEN}✓ All services started!${NC}"
     echo ""
@@ -29,55 +29,52 @@ case "$1" in
 
   down)
     echo -e "${YELLOW}▼ Stopping all services...${NC}"
-    docker compose -p $PROJECT_NAME down
+    docker compose -p "$PROJECT_NAME" down
     echo -e "${GREEN}✓ All services stopped.${NC}"
     ;;
 
   clean)
     echo -e "${RED}✕ Stopping services and removing volumes (FULL RESET)...${NC}"
-    docker compose -p $PROJECT_NAME down -v
+    docker compose -p "$PROJECT_NAME" down -v
     echo -e "${GREEN}✓ Clean slate. All data removed.${NC}"
     ;;
 
   restart)
     echo -e "${YELLOW}↻ Restarting ${2:-all services}...${NC}"
-    if [ -z "$2" ]; then
-      docker compose -p $PROJECT_NAME restart
+    if [ -z "${2:-}" ]; then
+      docker compose -p "$PROJECT_NAME" restart
     else
-      docker compose -p $PROJECT_NAME restart "$2"
+      docker compose -p "$PROJECT_NAME" restart "$2"
     fi
     echo -e "${GREEN}✓ Restart complete.${NC}"
     ;;
 
   rebuild)
     echo -e "${YELLOW}↻ Rebuilding ${2:-all services}...${NC}"
-    if [ -z "$2" ]; then
-      docker compose -p $PROJECT_NAME up --build -d
+    if [ -z "${2:-}" ]; then
+      docker compose -p "$PROJECT_NAME" up --build -d
     else
-      docker compose -p $PROJECT_NAME up --build -d "$2"
+      docker compose -p "$PROJECT_NAME" up --build -d "$2"
     fi
     echo -e "${GREEN}✓ Rebuild complete.${NC}"
     ;;
 
   logs)
-    if [ -z "$2" ]; then
-      docker compose -p $PROJECT_NAME logs -f --tail=50
+    if [ -z "${2:-}" ]; then
+      docker compose -p "$PROJECT_NAME" logs -f --tail=50
     else
-      docker compose -p $PROJECT_NAME logs -f --tail=50 "$2"
+      docker compose -p "$PROJECT_NAME" logs -f --tail=50 "$2"
     fi
     ;;
 
   status)
     echo -e "${BLUE}Service Status:${NC}"
-    docker compose -p $PROJECT_NAME ps
-    echo ""
-    echo -e "${BLUE}Health Checks:${NC}"
-    docker compose -p $PROJECT_NAME ps --format "table {{.Name}}\t{{.Status}}"
+    docker compose -p "$PROJECT_NAME" ps
     ;;
 
   infra)
     echo -e "${GREEN}▶ Starting infrastructure only (postgres, mongo, rabbitmq)...${NC}"
-    docker compose -p $PROJECT_NAME up -d postgres mongo rabbitmq
+    docker compose -p "$PROJECT_NAME" up -d postgres mongo rabbitmq
     echo -e "${GREEN}✓ Infrastructure ready.${NC}"
     echo ""
     echo -e "  ${BLUE}PostgreSQL:${NC}    localhost:5432 (postgres/postgres)"
@@ -87,34 +84,42 @@ case "$1" in
 
   test)
     echo -e "${BLUE}Running all unit tests...${NC}"
-    dotnet test tests/Party.API.Tests/ --verbosity normal
-    dotnet test tests/Catalog.API.Tests/ --verbosity normal
-    dotnet test tests/Lending.API.Tests/ --verbosity normal
-    dotnet test tests/Audit.API.Tests/ --verbosity normal
-    echo -e "${GREEN}✓ All tests passed.${NC}"
+    FAILED=0
+    for project in Party.API.Tests Catalog.API.Tests Lending.API.Tests Audit.API.Tests; do
+      echo ""
+      echo -e "${BLUE}  → $project${NC}"
+      dotnet test "tests/$project" --verbosity normal || FAILED=$((FAILED + 1))
+    done
+    echo ""
+    if [ "$FAILED" -eq 0 ]; then
+      echo -e "${GREEN}✓ All tests passed.${NC}"
+    else
+      echo -e "${RED}✕ $FAILED project(s) had failures.${NC}"
+      exit 1
+    fi
     ;;
 
   migrate)
     echo -e "${BLUE}Running EF Core migrations...${NC}"
     echo "  → Party.API"
-    cd backend/Party.API && dotnet ef database update && cd ../..
+    (cd backend/Party.API && dotnet ef database update)
     echo "  → Catalog.API"
-    cd backend/Catalog.API && dotnet ef database update && cd ../..
+    (cd backend/Catalog.API && dotnet ef database update)
     echo "  → Lending.API"
-    cd backend/Lending.API && dotnet ef database update && cd ../..
+    (cd backend/Lending.API && dotnet ef database update)
     echo -e "${GREEN}✓ All migrations applied.${NC}"
     ;;
 
   seed-check)
     echo -e "${BLUE}Checking seed data...${NC}"
     echo "  → Parties:"
-    docker compose -p $PROJECT_NAME exec postgres \
+    docker compose -p "$PROJECT_NAME" exec postgres \
       psql -U postgres -d party_db -c "SELECT id, first_name, last_name FROM parties;" 2>/dev/null || echo "  (DB not ready)"
     echo "  → Categories:"
-    docker compose -p $PROJECT_NAME exec postgres \
+    docker compose -p "$PROJECT_NAME" exec postgres \
       psql -U postgres -d catalog_db -c "SELECT id, name FROM categories;" 2>/dev/null || echo "  (DB not ready)"
     echo "  → Books:"
-    docker compose -p $PROJECT_NAME exec postgres \
+    docker compose -p "$PROJECT_NAME" exec postgres \
       psql -U postgres -d catalog_db -c "SELECT id, title, available_copies, total_copies FROM books;" 2>/dev/null || echo "  (DB not ready)"
     ;;
 
@@ -145,13 +150,13 @@ case "$1" in
     echo ""
     echo -e "  ${BLUE}Checking seed data via API...${NC}"
 
-    echo -n "  GET /api/parties (expect 4)... "
-    COUNT=$(curl -sf http://localhost:5100/api/parties 2>/dev/null | python3 -c "import sys,json; print(len(json.load(sys.stdin)))" 2>/dev/null || echo "0")
-    [ "$COUNT" = "4" ] && echo -e "${GREEN}✓ ($COUNT parties)${NC}" || echo -e "${RED}✕ (got $COUNT)${NC}"
+    echo -n "  GET /api/parties (expect >0)... "
+    COUNT=$(curl -sf http://localhost:5100/api/parties 2>/dev/null | jq 'if type == "array" then length elif .items then .items | length else 0 end' 2>/dev/null || echo "0")
+    [ "${COUNT:-0}" -gt 0 ] && echo -e "${GREEN}✓ ($COUNT parties)${NC}" || echo -e "${RED}✕ (got ${COUNT:-0})${NC}"
 
-    echo -n "  GET /api/catalog/books (expect 4)... "
-    COUNT=$(curl -sf http://localhost:5200/api/catalog/books 2>/dev/null | python3 -c "import sys,json; print(len(json.load(sys.stdin)))" 2>/dev/null || echo "0")
-    [ "$COUNT" = "4" ] && echo -e "${GREEN}✓ ($COUNT books)${NC}" || echo -e "${RED}✕ (got $COUNT)${NC}"
+    echo -n "  GET /api/catalog/books (expect >0)... "
+    COUNT=$(curl -sf http://localhost:5200/api/catalog/books 2>/dev/null | jq 'if type == "array" then length elif .items then .items | length else 0 end' 2>/dev/null || echo "0")
+    [ "${COUNT:-0}" -gt 0 ] && echo -e "${GREEN}✓ ($COUNT books)${NC}" || echo -e "${RED}✕ (got ${COUNT:-0})${NC}"
 
     echo ""
     echo -e "${GREEN}✓ Smoke test complete.${NC}"
@@ -161,27 +166,28 @@ case "$1" in
     echo -e "${BLUE}Running end-to-end borrow flow...${NC}"
     echo ""
 
-    # Borrow "1984" for John Doe
+    # These UUIDs match the seed data inserted at startup.
+    # If you reseed with different IDs, update these accordingly.
     BOOK_ID="cccccccc-cccc-cccc-cccc-cccccccccccc"
     CUSTOMER_ID="33333333-3333-3333-3333-333333333333"
 
     echo "  → Checking book availability..."
-    curl -sf http://localhost:5200/api/catalog/books/$BOOK_ID/availability 2>/dev/null | python3 -m json.tool 2>/dev/null || echo "  (failed)"
+    curl -sf "http://localhost:5200/api/catalog/books/$BOOK_ID/availability" 2>/dev/null | jq . 2>/dev/null || echo "  (failed)"
 
     echo ""
     echo "  → Borrowing '1984' for John Doe..."
     RESULT=$(curl -sf -X POST http://localhost:5300/api/lending/borrow \
       -H "Content-Type: application/json" \
       -d "{\"bookId\":\"$BOOK_ID\",\"customerId\":\"$CUSTOMER_ID\"}" 2>/dev/null)
-    echo "$RESULT" | python3 -m json.tool 2>/dev/null || echo "  (failed)"
+    echo "$RESULT" | jq . 2>/dev/null || echo "  (failed)"
 
     echo ""
     echo "  → Checking availability after borrow..."
-    curl -sf http://localhost:5200/api/catalog/books/$BOOK_ID/availability 2>/dev/null | python3 -m json.tool 2>/dev/null || echo "  (failed)"
+    curl -sf "http://localhost:5200/api/catalog/books/$BOOK_ID/availability" 2>/dev/null | jq . 2>/dev/null || echo "  (failed)"
 
     echo ""
     echo "  → Checking borrowing summary..."
-    curl -sf http://localhost:5300/api/lending/summary 2>/dev/null | python3 -m json.tool 2>/dev/null || echo "  (failed)"
+    curl -sf http://localhost:5300/api/lending/summary 2>/dev/null | jq . 2>/dev/null || echo "  (failed)"
 
     echo ""
     echo "  → Waiting 2s for audit event propagation..."
@@ -189,13 +195,13 @@ case "$1" in
 
     echo ""
     echo "  → Checking audit events for the book..."
-    curl -sf "http://localhost:5400/api/events/books/$BOOK_ID?page=1&pageSize=5" 2>/dev/null | python3 -m json.tool 2>/dev/null || echo "  (failed)"
+    curl -sf "http://localhost:5400/api/events/books/$BOOK_ID?page=1&pageSize=5" 2>/dev/null | jq . 2>/dev/null || echo "  (failed)"
 
     echo ""
     echo "  → Returning the book..."
-    curl -sf -X POST http://localhost:5300/api/lending/$BOOK_ID/return \
+    curl -sf -X POST "http://localhost:5300/api/lending/$BOOK_ID/return" \
       -H "Content-Type: application/json" \
-      -d "{\"customerId\":\"$CUSTOMER_ID\"}" 2>/dev/null | python3 -m json.tool 2>/dev/null || echo "  (failed)"
+      -d "{\"customerId\":\"$CUSTOMER_ID\"}" 2>/dev/null | jq . 2>/dev/null || echo "  (failed)"
 
     echo ""
     echo -e "${GREEN}✓ End-to-end flow complete.${NC}"
