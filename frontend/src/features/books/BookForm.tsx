@@ -8,8 +8,13 @@ import {
   Paper,
   MenuItem,
   Autocomplete,
+  IconButton,
 } from '@mui/material'
-import { ArrowBack as ArrowBackIcon } from '@mui/icons-material'
+import {
+  ArrowBack as ArrowBackIcon,
+  Add as AddIcon,
+  Remove as RemoveIcon,
+} from '@mui/icons-material'
 import { useBook, useCreateBook, useUpdateBook } from '@/hooks/useBooks'
 import { useCategories } from '@/hooks/useCategories'
 import { useParties } from '@/hooks/useParties'
@@ -167,20 +172,36 @@ const BookForm: React.FC = () => {
             ))}
           </TextField>
 
-          <TextField
-            label="Total Copies"
-            type="number"
-            value={formData.totalCopies}
-            onChange={(e) =>
-              setFormData({ ...formData, totalCopies: parseInt(e.target.value) || 0 })
-            }
-            error={!!errors.totalCopies}
-            helperText={errors.totalCopies}
-            fullWidth
-            sx={{ mb: 3 }}
-          />
+          <Box sx={{ mb: 3 }}>
+            <Typography variant="body2" color="textSecondary" sx={{ mb: 1 }}>
+              Total Copies
+            </Typography>
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+              <IconButton
+                size="small"
+                onClick={() => setFormData({ ...formData, totalCopies: Math.max(1, formData.totalCopies - 1) })}
+                disabled={formData.totalCopies <= 1}
+              >
+                <RemoveIcon />
+              </IconButton>
+              <TextField
+                value={formData.totalCopies}
+                onChange={(e) => setFormData({ ...formData, totalCopies: Math.max(1, parseInt(e.target.value) || 1) })}
+                error={!!errors.totalCopies}
+                helperText={errors.totalCopies}
+                size="small"
+                inputProps={{ style: { textAlign: 'center', width: 60 } }}
+              />
+              <IconButton
+                size="small"
+                onClick={() => setFormData({ ...formData, totalCopies: formData.totalCopies + 1 })}
+              >
+                <AddIcon />
+              </IconButton>
+            </Box>
+          </Box>
 
-          <Box sx={{ display: 'flex', gap: 2, mt: 4 }}>
+          <Box sx={{ display: 'flex', gap: 2, mt: 4, justifyContent: 'flex-end' }}>
             <Button variant="outlined" onClick={() => navigate('/books')}>
               Cancel
             </Button>
@@ -189,7 +210,7 @@ const BookForm: React.FC = () => {
               variant="contained"
               disabled={createMutation.isPending || updateMutation.isPending}
             >
-              {isEditing ? 'Update' : 'Create'}
+              {isEditing ? 'Update' : 'Add Book'}
             </Button>
           </Box>
         </form>

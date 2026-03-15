@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import {
   Box,
+  Grid,
   Typography,
   TextField,
   Button,
@@ -95,24 +96,33 @@ const PartyForm: React.FC = () => {
 
       <Paper sx={{ p: 4, maxWidth: 600 }}>
         <form onSubmit={handleSubmit}>
-          <TextField
-            label="First Name"
-            value={formData.firstName}
-            onChange={(e) => setFormData({ ...formData, firstName: e.target.value })}
-            error={!!errors.firstName}
-            helperText={errors.firstName}
-            fullWidth
-            sx={{ mb: 3 }}
-          />
-          <TextField
-            label="Last Name"
-            value={formData.lastName}
-            onChange={(e) => setFormData({ ...formData, lastName: e.target.value })}
-            error={!!errors.lastName}
-            helperText={errors.lastName}
-            fullWidth
-            sx={{ mb: 3 }}
-          />
+          <Typography variant="body2" color="textSecondary" sx={{ mb: 3 }}>
+            {isEditing
+              ? 'Update the party record details below.'
+              : 'Create a new entity record. A party can be an author, customer, or both.'}
+          </Typography>
+          <Grid container spacing={2} sx={{ mb: 3 }}>
+            <Grid size={{ xs: 12, sm: 6 }}>
+              <TextField
+                label="First Name"
+                value={formData.firstName}
+                onChange={(e) => setFormData({ ...formData, firstName: e.target.value })}
+                error={!!errors.firstName}
+                helperText={errors.firstName}
+                fullWidth
+              />
+            </Grid>
+            <Grid size={{ xs: 12, sm: 6 }}>
+              <TextField
+                label="Last Name"
+                value={formData.lastName}
+                onChange={(e) => setFormData({ ...formData, lastName: e.target.value })}
+                error={!!errors.lastName}
+                helperText={errors.lastName}
+                fullWidth
+              />
+            </Grid>
+          </Grid>
           <TextField
             label="Email"
             type="email"
@@ -161,8 +171,11 @@ const PartyForm: React.FC = () => {
               label="Customer"
             />
           </Box>
+          <Typography variant="caption" color="textSecondary">
+            A party can have both Author and Customer roles simultaneously.
+          </Typography>
 
-          <Box sx={{ display: 'flex', gap: 2, mt: 4 }}>
+          <Box sx={{ display: 'flex', gap: 2, mt: 4, justifyContent: 'flex-end' }}>
             <Button variant="outlined" onClick={() => navigate('/parties')}>
               Cancel
             </Button>
