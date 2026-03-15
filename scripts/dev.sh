@@ -23,6 +23,7 @@ case "${1:-}" in
     echo -e "  ${BLUE}Catalog.API:${NC}      http://localhost:5200/swagger"
     echo -e "  ${BLUE}Lending.API:${NC}      http://localhost:5300/swagger"
     echo -e "  ${BLUE}Audit.API:${NC}        http://localhost:5400/swagger"
+    echo -e "  ${BLUE}Documentation:${NC}    http://localhost:8000"
     echo -e "  ${BLUE}RabbitMQ Mgmt:${NC}    http://localhost:15672 (guest/guest)"
     echo ""
     ;;
@@ -141,6 +142,10 @@ case "${1:-}" in
 
     echo -n "  Audit.API health... "
     curl -sf http://localhost:5400/swagger/index.html > /dev/null 2>&1 && \
+      echo -e "${GREEN}✓${NC}" || echo -e "${RED}✕${NC}"
+
+    echo -n "  Documentation... "
+    curl -sf http://localhost:8000 > /dev/null 2>&1 && \
       echo -e "${GREEN}✓${NC}" || echo -e "${RED}✕${NC}"
 
     echo -n "  RabbitMQ management... "
