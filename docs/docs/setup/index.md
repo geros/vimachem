@@ -37,6 +37,18 @@ This will start:
 - All four backend APIs
 - React frontend
 
+### Initial Data Seeding
+
+On first startup, the services automatically seed sample data for testing:
+
+| Entity | Count | Details |
+|--------|-------|---------|
+| **Parties** | 54 | 4 original (Orwell, Christie, Doe, King) + 20 authors + 30 customers |
+| **Categories** | 8 | Fiction, Mystery, Science Fiction, Biography, History, Romance, Thriller, Fantasy |
+| **Books** | 100 | 4 original + 96 additional across all categories |
+
+The seeded data uses fixed IDs so it's consistent across restarts. You can log in as any seeded customer or explore the catalog immediately after startup.
+
 ## Service URLs
 
 Once running, access the services at:
