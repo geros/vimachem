@@ -163,7 +163,6 @@ const BorrowingOverview: React.FC = () => {
                       <TableCell>Customer</TableCell>
                       <TableCell>Borrowed At</TableCell>
                       <TableCell>Duration</TableCell>
-                      <TableCell>Status</TableCell>
                       <TableCell>Actions</TableCell>
                     </TableRow>
                   </TableHead>
@@ -187,13 +186,6 @@ const BorrowingOverview: React.FC = () => {
                             >
                               {days} day{days !== 1 ? 's' : ''}
                             </Typography>
-                          </TableCell>
-                          <TableCell>
-                            <Chip
-                              label={overdue ? 'Overdue' : 'Active'}
-                              color={overdue ? 'error' : 'success'}
-                              size="small"
-                            />
                           </TableCell>
                           <TableCell>
                             <Button
@@ -230,7 +222,6 @@ const BorrowingOverview: React.FC = () => {
                 <TableCell>Customer</TableCell>
                 <TableCell>Borrowed At</TableCell>
                 <TableCell>Duration</TableCell>
-                <TableCell>Status</TableCell>
                 <TableCell>Actions</TableCell>
               </TableRow>
             </TableHead>
@@ -255,13 +246,6 @@ const BorrowingOverview: React.FC = () => {
                       </Typography>
                     </TableCell>
                     <TableCell>
-                      <Chip
-                        label={overdue ? 'Overdue' : 'Active'}
-                        color={overdue ? 'error' : 'success'}
-                        size="small"
-                      />
-                    </TableCell>
-                    <TableCell>
                       <Button
                         size="small"
                         variant="outlined"
@@ -277,7 +261,7 @@ const BorrowingOverview: React.FC = () => {
               })}
               {!filteredFlat.length && (
                 <TableRow>
-                  <TableCell colSpan={6} align="center">
+                  <TableCell colSpan={5} align="center">
                     <EmptyState title="No active borrowings" />
                   </TableCell>
                 </TableRow>

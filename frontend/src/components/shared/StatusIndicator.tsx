@@ -1,8 +1,8 @@
 import { Chip } from '@mui/material'
-import { CheckCircle, Cancel, Schedule } from '@mui/icons-material'
+import { CheckCircle, Cancel } from '@mui/icons-material'
 
 interface StatusIndicatorProps {
-  status: 'available' | 'unavailable' | 'active' | 'returned' | 'borrowed'
+  status: 'available' | 'unavailable'
   showLabel?: boolean
 }
 
@@ -20,21 +20,6 @@ export const StatusIndicator: React.FC<StatusIndicatorProps> = ({
       color: '#DC3545',
       icon: <Cancel fontSize="small" />,
       label: 'Unavailable',
-    },
-    active: {
-      color: '#DC3545',
-      icon: <Schedule fontSize="small" />,
-      label: 'Active',
-    },
-    returned: {
-      color: '#00A3B5',
-      icon: <CheckCircle fontSize="small" />,
-      label: 'Returned',
-    },
-    borrowed: {
-      color: '#F5A623',
-      icon: <Schedule fontSize="small" />,
-      label: 'Borrowed',
     },
   }
 
