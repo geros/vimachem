@@ -13,7 +13,9 @@ import {
   Typography,
   Alert,
   Chip,
+  IconButton,
 } from '@mui/material'
+import { Close as CloseIcon, CheckCircle as CheckIcon } from '@mui/icons-material'
 import { useBooks } from '@/hooks/useBooks'
 import { useParties } from '@/hooks/useParties'
 import { useBookAvailability } from '@/hooks/useBooks'
@@ -32,8 +34,8 @@ const BorrowReturnDialog: React.FC<BorrowReturnDialogProps> = ({
   initialTab = 'borrow',
 }) => {
   const [activeTab, setActiveTab] = useState(initialTab)
-  const [selectedBook, setSelectedBook] = useState<{ id: string; title: string; available: number } | null>(null)
-  const [selectedCustomer, setSelectedCustomer] = useState<{ id: string; name: string } | null>(null)
+  const [selectedBook, setSelectedBook] = useState<{ id: string; title: string; authorName: string; available: number } | null>(null)
+  const [selectedCustomer, setSelectedCustomer] = useState<{ id: string; name: string; email: string } | null>(null)
   const [selectedReturn, setSelectedReturn] = useState<{ bookId: string; customerId: string; bookTitle: string; customerName: string; borrowedAt: string } | null>(null)
 
   const { data: books } = useBooks()
@@ -54,12 +56,8 @@ const BorrowReturnDialog: React.FC<BorrowReturnDialogProps> = ({
 
   const handleBorrow = async () => {
     if (!selectedBook || !selectedCustomer) return
-
     try {
-      await borrowMutation.mutateAsync({
-        bookId: selectedBook.id,
-        customerId: selectedCustomer.id,
-      })
+      await borrowMutation.mutateAsync({ bookId: selectedBook.id, customerId: selectedCustomer.id })
       showSuccess('Book borrowed successfully')
       handleClose()
     } catch {
@@ -69,12 +67,8 @@ const BorrowReturnDialog: React.FC<BorrowReturnDialogProps> = ({
 
   const handleReturn = async () => {
     if (!selectedReturn) return
-
     try {
-      await returnMutation.mutateAsync({
-        bookId: selectedReturn.bookId,
-        data: { customerId: selectedReturn.customerId },
-      })
+      await returnMutation.mutateAsync({ bookId: selectedReturn.bookId, data: { customerId: selectedReturn.customerId } })
       showSuccess('Book returned successfully')
       handleClose()
     } catch {
@@ -100,12 +94,20 @@ const BorrowReturnDialog: React.FC<BorrowReturnDialogProps> = ({
   ) ?? []
 
   const customers = parties?.filter((p) => p.roles.includes('Customer')) ?? []
-
   const canBorrow = selectedBook && selectedCustomer && availability?.isAvailable
+
+  const returnDaysElapsed = selectedReturn
+    ? Math.floor((Date.now() - new Date(selectedReturn.borrowedAt).getTime()) / 86400000)
+    : 0
 
   return (
     <Dialog open={open} onClose={handleClose} maxWidth="sm" fullWidth>
-      <DialogTitle>Borrow / Return Books</DialogTitle>
+      <DialogTitle sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+        Borrow / Return Books
+        <IconButton size="small" onClick={handleClose}>
+          <CloseIcon />
+        </IconButton>
+      </DialogTitle>
       <DialogContent>
         <Tabs value={activeTab} onChange={handleTabChange} sx={{ mb: 3 }}>
           <Tab label="Borrow" value="borrow" />
@@ -115,81 +117,83 @@ const BorrowReturnDialog: React.FC<BorrowReturnDialogProps> = ({
         {activeTab === 'borrow' ? (
           <Box display="flex" flexDirection="column" gap={3}>
             <Autocomplete
-              options={books?.map((b) => ({ id: b.id, title: b.title, available: b.availableCopies })) ?? []}
-              getOptionLabel={(option) => `${option.title} (${option.available} available)`}
+              options={books?.map((b) => ({ id: b.id, title: b.title, authorName: b.authorName, available: b.availableCopies })) ?? []}
+              getOptionLabel={(option) => `${option.title} — by ${option.authorName} (${option.available} available)`}
               value={selectedBook}
               onChange={(_, newValue) => setSelectedBook(newValue)}
-              renderInput={(params) => (
-                <TextField {...params} label="Select Book" fullWidth />
-              )}
+              renderInput={(params) => <TextField {...params} label="Select Book" fullWidth />}
               isOptionEqualToValue={(option, value) => option.id === value.id}
             />
 
-            {selectedBook && availability && (
-              <Box>
-                <Typography variant="subtitle2">Availability:</Typography>
-                <Chip
-                  label={availability.isAvailable ? 'Available' : 'Not Available'}
-                  color={availability.isAvailable ? 'success' : 'error'}
-                  size="small"
-                />
+            <Autocomplete
+              options={customers.map((p) => ({ id: p.id, name: `${p.firstName} ${p.lastName}`, email: p.email }))}
+              getOptionLabel={(option) => `${option.name} (${option.email})`}
+              value={selectedCustomer}
+              onChange={(_, newValue) => setSelectedCustomer(newValue)}
+              renderInput={(params) => <TextField {...params} label="Select Customer" fullWidth />}
+              isOptionEqualToValue={(option, value) => option.id === value.id}
+            />
+
+            {selectedBook && selectedCustomer && availability && availability.isAvailable && (
+              <Box
+                sx={{
+                  p: 2,
+                  borderRadius: 2,
+                  backgroundColor: '#EFF6FF',
+                  border: '1px solid #BFDBFE',
+                }}
+              >
+                <Typography variant="subtitle2" fontWeight={600} gutterBottom>
+                  Lending "{selectedBook.title}" to {selectedCustomer.name}
+                </Typography>
                 <Typography variant="body2" color="textSecondary">
-                  {availability.availableCopies} of {availability.totalCopies} copies available
+                  {availability.availableCopies} of {availability.totalCopies} copies available after this borrow
                 </Typography>
               </Box>
             )}
 
-            <Autocomplete
-              options={customers.map((p) => ({
-                id: p.id,
-                name: `${p.firstName} ${p.lastName}`,
-              }))}
-              getOptionLabel={(option) => option.name}
-              value={selectedCustomer}
-              onChange={(_, newValue) => setSelectedCustomer(newValue)}
-              renderInput={(params) => (
-                <TextField {...params} label="Select Customer" fullWidth />
-              )}
-              isOptionEqualToValue={(option, value) => option.id === value.id}
-            />
-
-            {!availability?.isAvailable && selectedBook && (
+            {selectedBook && !availability?.isAvailable && (
               <Alert severity="warning">This book is currently not available for borrowing.</Alert>
             )}
           </Box>
         ) : (
-          <Box>
+          <Box display="flex" flexDirection="column" gap={3}>
             <Autocomplete
               options={activeBorrowings}
               getOptionLabel={(option) =>
                 `${option.bookTitle} - ${option.customerName} (borrowed ${new Date(option.borrowedAt).toLocaleDateString()})`
               }
               value={selectedReturn}
-              onChange={(_, newValue) => {
-                if (newValue) {
-                  setSelectedReturn({
-                    bookId: newValue.bookId,
-                    customerId: newValue.customerId,
-                    bookTitle: newValue.bookTitle,
-                    customerName: newValue.customerName,
-                    borrowedAt: newValue.borrowedAt,
-                  })
-                } else {
-                  setSelectedReturn(null)
-                }
-              }}
-              renderInput={(params) => (
-                <TextField {...params} label="Select Borrowing to Return" fullWidth />
-              )}
+              onChange={(_, newValue) => setSelectedReturn(newValue ?? null)}
+              renderInput={(params) => <TextField {...params} label="Select Borrowing to Return" fullWidth />}
               isOptionEqualToValue={(option, value) =>
                 option.bookId === value?.bookId && option.customerId === value?.customerId
               }
             />
 
+            {selectedReturn && (
+              <Box
+                sx={{
+                  p: 2,
+                  borderRadius: 2,
+                  backgroundColor: '#F0FDF4',
+                  border: '1px solid #BBF7D0',
+                }}
+              >
+                <Typography variant="subtitle2" fontWeight={600} gutterBottom>
+                  Returning "{selectedReturn.bookTitle}" from {selectedReturn.customerName}
+                </Typography>
+                <Typography variant="body2" color="textSecondary">
+                  Borrowed on {new Date(selectedReturn.borrowedAt).toLocaleDateString()} · {returnDaysElapsed} day{returnDaysElapsed !== 1 ? 's' : ''} elapsed
+                </Typography>
+                {returnDaysElapsed > 14 && (
+                  <Chip label="Overdue" color="error" size="small" sx={{ mt: 1 }} />
+                )}
+              </Box>
+            )}
+
             {activeBorrowings.length === 0 && (
-              <Alert severity="info" sx={{ mt: 2 }}>
-                No active borrowings to return.
-              </Alert>
+              <Alert severity="info">No active borrowings to return.</Alert>
             )}
           </Box>
         )}
@@ -200,18 +204,20 @@ const BorrowReturnDialog: React.FC<BorrowReturnDialogProps> = ({
           <Button
             onClick={handleBorrow}
             variant="contained"
+            startIcon={<CheckIcon />}
             disabled={!canBorrow || borrowMutation.isPending}
           >
-            Borrow
+            Confirm Borrow
           </Button>
         ) : (
           <Button
             onClick={handleReturn}
             variant="contained"
             color="success"
+            startIcon={<CheckIcon />}
             disabled={!selectedReturn || returnMutation.isPending}
           >
-            Return
+            Confirm Return
           </Button>
         )}
       </DialogActions>
