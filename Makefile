@@ -1,4 +1,4 @@
-.PHONY: up down clean logs status infra test smoke e2e rebuild
+.PHONY: up down clean logs status infra test smoke rebuild
 
 PROJECT = library-management
 
@@ -34,9 +34,6 @@ test:
 
 smoke:
 	@./scripts/dev.sh smoke
-
-e2e:
-	@./scripts/dev.sh e2e
 
 rebuild:
 	docker compose -p $(PROJECT) up --build -d $(SVC)

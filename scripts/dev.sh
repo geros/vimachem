@@ -167,51 +167,6 @@ case "${1:-}" in
     echo -e "${GREEN}✓ Smoke test complete.${NC}"
     ;;
 
-  e2e)
-    echo -e "${BLUE}Running end-to-end borrow flow...${NC}"
-    echo ""
-
-    # These UUIDs match the seed data inserted at startup.
-    # If you reseed with different IDs, update these accordingly.
-    BOOK_ID="cccccccc-cccc-cccc-cccc-cccccccccccc"
-    CUSTOMER_ID="33333333-3333-3333-3333-333333333333"
-
-    echo "  → Checking book availability..."
-    curl -sf "http://localhost:5200/api/catalog/books/$BOOK_ID/availability" 2>/dev/null | jq . 2>/dev/null || echo "  (failed)"
-
-    echo ""
-    echo "  → Borrowing '1984' for John Doe..."
-    RESULT=$(curl -sf -X POST http://localhost:5300/api/lending/borrow \
-      -H "Content-Type: application/json" \
-      -d "{\"bookId\":\"$BOOK_ID\",\"customerId\":\"$CUSTOMER_ID\"}" 2>/dev/null)
-    echo "$RESULT" | jq . 2>/dev/null || echo "  (failed)"
-
-    echo ""
-    echo "  → Checking availability after borrow..."
-    curl -sf "http://localhost:5200/api/catalog/books/$BOOK_ID/availability" 2>/dev/null | jq . 2>/dev/null || echo "  (failed)"
-
-    echo ""
-    echo "  → Checking borrowing summary..."
-    curl -sf http://localhost:5300/api/lending/summary 2>/dev/null | jq . 2>/dev/null || echo "  (failed)"
-
-    echo ""
-    echo "  → Waiting 2s for audit event propagation..."
-    sleep 2
-
-    echo ""
-    echo "  → Checking audit events for the book..."
-    curl -sf "http://localhost:5400/api/events/books/$BOOK_ID?page=1&pageSize=5" 2>/dev/null | jq . 2>/dev/null || echo "  (failed)"
-
-    echo ""
-    echo "  → Returning the book..."
-    curl -sf -X POST "http://localhost:5300/api/lending/$BOOK_ID/return" \
-      -H "Content-Type: application/json" \
-      -d "{\"customerId\":\"$CUSTOMER_ID\"}" 2>/dev/null | jq . 2>/dev/null || echo "  (failed)"
-
-    echo ""
-    echo -e "${GREEN}✓ End-to-end flow complete.${NC}"
-    ;;
-
   *)
     echo "Library Management System - Development Helper"
     echo ""
@@ -230,7 +185,6 @@ case "${1:-}" in
     echo "  migrate      Apply EF Core migrations (local)"
     echo "  seed-check   Verify seed data in databases"
     echo "  smoke        Quick health check all endpoints"
-    echo "  e2e          Run full borrow/return end-to-end flow"
     echo ""
     echo "Examples:"
     echo "  ./scripts/dev.sh up"
