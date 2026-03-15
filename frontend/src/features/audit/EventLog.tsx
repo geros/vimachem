@@ -12,45 +12,44 @@ import {
   Chip,
   IconButton,
   Collapse,
-  Tabs,
-  Tab,
   TextField,
-  Autocomplete,
   Button,
   Tooltip,
+  MenuItem,
+  Select,
+  FormControl,
+  InputLabel,
 } from '@mui/material'
 import {
   KeyboardArrowDown as KeyboardArrowDownIcon,
   KeyboardArrowUp as KeyboardArrowUpIcon,
   FileDownload as ExportIcon,
   Refresh as RefreshIcon,
+  FilterAltOff as ClearIcon,
 } from '@mui/icons-material'
-import { usePartyEvents, useBookEvents } from '@/hooks/useEvents'
-import { useParties } from '@/hooks/useParties'
-import { useBooks } from '@/hooks/useBooks'
+import { useAllEvents } from '@/hooks/useEvents'
 import { Pagination } from '@/components/shared/Pagination'
 import { LoadingSkeleton } from '@/components/shared/LoadingSkeleton'
 import { EmptyState } from '@/components/shared/EmptyState'
 import { formatRelativeTime } from '@/utils/formatters'
-import type { LibraryEvent } from '@/types/event'
+import type { EventFilter, LibraryEvent } from '@/types/event'
 import { useQueryClient } from '@tanstack/react-query'
 
-interface EventRowProps {
-  event: LibraryEvent
-}
+const ENTITY_TYPES = ['Party', 'Book', 'Borrowing']
+const ACTIONS = ['Created', 'Updated', 'Borrowed', 'Returned', 'Deleted']
 
 const getActionColor = (action: string): 'success' | 'warning' | 'error' | 'info' | 'default' => {
   switch (action.toLowerCase()) {
-    case 'created': return 'success'
-    case 'updated': return 'warning'
-    case 'deleted': return 'error'
+    case 'created':  return 'success'
+    case 'updated':  return 'warning'
+    case 'deleted':  return 'error'
     case 'borrowed': return 'info'
     case 'returned': return 'default'
-    default: return 'default'
+    default:         return 'default'
   }
 }
 
-const EventRow: React.FC<EventRowProps> = ({ event }) => {
+const EventRow: React.FC<{ event: LibraryEvent }> = ({ event }) => {
   const [open, setOpen] = useState(false)
 
   return (
@@ -68,7 +67,9 @@ const EventRow: React.FC<EventRowProps> = ({ event }) => {
         <TableCell>
           <Chip label={event.action} color={getActionColor(event.action)} size="small" />
         </TableCell>
-        <TableCell>{event.eventType}</TableCell>
+        <TableCell sx={{ fontFamily: 'monospace', fontSize: '0.8rem', color: 'text.secondary' }}>
+          {event.eventType}
+        </TableCell>
       </TableRow>
       <TableRow>
         <TableCell style={{ paddingBottom: 0, paddingTop: 0 }} colSpan={5}>
@@ -91,6 +92,21 @@ const EventRow: React.FC<EventRowProps> = ({ event }) => {
                   <Typography variant="body2">{new Date(event.timestamp).toLocaleString()}</Typography>
                 </Box>
               </Box>
+              {Object.keys(event.relatedEntityIds ?? {}).length > 0 && (
+                <Box sx={{ mb: 2 }}>
+                  <Typography variant="caption" color="textSecondary" display="block" sx={{ mb: 0.5 }}>
+                    Related Entities
+                  </Typography>
+                  <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
+                    {Object.entries(event.relatedEntityIds).map(([k, v]) => (
+                      <Box key={k} sx={{ p: 1, bgcolor: '#F5F7FA', borderRadius: 1 }}>
+                        <Typography variant="caption" color="textSecondary" display="block">{k}</Typography>
+                        <Typography variant="body2" sx={{ fontFamily: 'monospace', fontSize: '0.8em' }}>{v}</Typography>
+                      </Box>
+                    ))}
+                  </Box>
+                </Box>
+              )}
               {event.payload !== undefined && event.payload !== null && (
                 <>
                   <Typography variant="caption" color="textSecondary" display="block" sx={{ mb: 0.5 }}>
@@ -112,28 +128,28 @@ const EventRow: React.FC<EventRowProps> = ({ event }) => {
   )
 }
 
+const EMPTY_FILTER: EventFilter = {}
+
 const EventLog: React.FC = () => {
-  const [activeTab, setActiveTab] = useState<'party' | 'book'>('party')
-  const [selectedParty, setSelectedParty] = useState<{ id: string; name: string } | null>(null)
-  const [selectedBook, setSelectedBook] = useState<{ id: string; title: string } | null>(null)
+  const [filter, setFilter] = useState<EventFilter>(EMPTY_FILTER)
+  const [pendingFilter, setPendingFilter] = useState<EventFilter>(EMPTY_FILTER)
   const [page, setPage] = useState(1)
   const [pageSize, setPageSize] = useState(20)
 
   const queryClient = useQueryClient()
-  const { data: parties } = useParties()
-  const { data: books } = useBooks()
+  const { data, isLoading } = useAllEvents(filter, page, pageSize)
 
-  const { data: partyEvents, isLoading: partyEventsLoading } = usePartyEvents(selectedParty?.id ?? '', page, pageSize)
-  const { data: bookEvents, isLoading: bookEventsLoading } = useBookEvents(selectedBook?.id ?? '', page, pageSize)
+  const hasActiveFilters = Object.values(filter).some(Boolean)
 
-  const currentData = activeTab === 'party' ? partyEvents : bookEvents
-  const isLoading = activeTab === 'party' ? partyEventsLoading : bookEventsLoading
-
-  const handleTabChange = (_: React.SyntheticEvent, newValue: 'party' | 'book') => {
-    setActiveTab(newValue)
+  const applyFilters = () => {
+    setFilter(pendingFilter)
     setPage(1)
-    setSelectedParty(null)
-    setSelectedBook(null)
+  }
+
+  const clearFilters = () => {
+    setPendingFilter(EMPTY_FILTER)
+    setFilter(EMPTY_FILTER)
+    setPage(1)
   }
 
   const handleRefresh = () => {
@@ -141,26 +157,27 @@ const EventLog: React.FC = () => {
   }
 
   const handleExport = () => {
-    if (!currentData?.items.length) return
-    const json = JSON.stringify(currentData.items, null, 2)
+    if (!data?.items.length) return
+    const json = JSON.stringify(data.items, null, 2)
     const blob = new Blob([json], { type: 'application/json' })
     const url = URL.createObjectURL(blob)
     const a = document.createElement('a')
     a.href = url
-    a.download = `audit-events-${activeTab}-${new Date().toISOString().split('T')[0]}.json`
+    a.download = `audit-events-${new Date().toISOString().split('T')[0]}.json`
     a.click()
     URL.revokeObjectURL(url)
   }
 
   return (
     <Box>
-      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
+      {/* Header */}
+      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
         <Box>
           <Typography variant="h4" sx={{ color: '#003B6F', fontWeight: 600 }}>
             Audit Event Log
           </Typography>
           <Typography variant="body2" color="textSecondary">
-            Track all system events across parties and books
+            {data ? `${data.totalCount.toLocaleString()} total events` : 'Track all system events'}
           </Typography>
         </Box>
         <Box sx={{ display: 'flex', gap: 1 }}>
@@ -173,89 +190,124 @@ const EventLog: React.FC = () => {
             variant="outlined"
             startIcon={<ExportIcon />}
             onClick={handleExport}
-            disabled={!currentData?.items.length}
+            disabled={!data?.items.length}
           >
             Export JSON
           </Button>
         </Box>
       </Box>
 
-      <Tabs value={activeTab} onChange={handleTabChange} sx={{ mb: 3 }}>
-        <Tab label="Party Events" value="party" />
-        <Tab label="Book Events" value="book" />
-      </Tabs>
+      {/* Filter bar */}
+      <Paper variant="outlined" sx={{ p: 2, mb: 3 }}>
+        <Box sx={{ display: 'flex', gap: 2, flexWrap: 'wrap', alignItems: 'flex-end' }}>
+          <FormControl size="small" sx={{ minWidth: 160 }}>
+            <InputLabel>Entity Type</InputLabel>
+            <Select
+              label="Entity Type"
+              value={pendingFilter.entityType ?? ''}
+              onChange={(e) => setPendingFilter(f => ({ ...f, entityType: e.target.value || undefined }))}
+            >
+              <MenuItem value=""><em>All</em></MenuItem>
+              {ENTITY_TYPES.map(t => <MenuItem key={t} value={t}>{t}</MenuItem>)}
+            </Select>
+          </FormControl>
 
-      <Box sx={{ mb: 3 }}>
-        {activeTab === 'party' ? (
-          <Autocomplete
-            options={parties?.map((p) => ({ id: p.id, name: `${p.firstName} ${p.lastName}` })) ?? []}
-            getOptionLabel={(option) => option.name}
-            value={selectedParty}
-            onChange={(_, newValue) => { setSelectedParty(newValue); setPage(1) }}
-            renderInput={(params) => <TextField {...params} label="Select Party" fullWidth />}
-            isOptionEqualToValue={(option, value) => option.id === value.id}
+          <FormControl size="small" sx={{ minWidth: 160 }}>
+            <InputLabel>Action</InputLabel>
+            <Select
+              label="Action"
+              value={pendingFilter.action ?? ''}
+              onChange={(e) => setPendingFilter(f => ({ ...f, action: e.target.value || undefined }))}
+            >
+              <MenuItem value=""><em>All</em></MenuItem>
+              {ACTIONS.map(a => <MenuItem key={a} value={a}>{a}</MenuItem>)}
+            </Select>
+          </FormControl>
+
+          <TextField
+            size="small"
+            label="Entity ID"
+            placeholder="UUID..."
+            value={pendingFilter.entityId ?? ''}
+            onChange={(e) => setPendingFilter(f => ({ ...f, entityId: e.target.value || undefined }))}
+            sx={{ minWidth: 220 }}
           />
-        ) : (
-          <Autocomplete
-            options={books?.map((b) => ({ id: b.id, title: b.title })) ?? []}
-            getOptionLabel={(option) => option.title}
-            value={selectedBook}
-            onChange={(_, newValue) => { setSelectedBook(newValue); setPage(1) }}
-            renderInput={(params) => <TextField {...params} label="Select Book" fullWidth />}
-            isOptionEqualToValue={(option, value) => option.id === value.id}
+
+          <TextField
+            size="small"
+            label="From"
+            type="date"
+            value={pendingFilter.from ?? ''}
+            onChange={(e) => setPendingFilter(f => ({ ...f, from: e.target.value || undefined }))}
+            InputLabelProps={{ shrink: true }}
           />
-        )}
-      </Box>
 
-      {!selectedParty && activeTab === 'party' && (
-        <EmptyState title="Select a party to view events" />
+          <TextField
+            size="small"
+            label="To"
+            type="date"
+            value={pendingFilter.to ?? ''}
+            onChange={(e) => setPendingFilter(f => ({ ...f, to: e.target.value || undefined }))}
+            InputLabelProps={{ shrink: true }}
+          />
+
+          <Box sx={{ display: 'flex', gap: 1 }}>
+            <Button variant="contained" size="small" onClick={applyFilters}>
+              Apply
+            </Button>
+            {hasActiveFilters && (
+              <Button
+                variant="outlined"
+                size="small"
+                startIcon={<ClearIcon />}
+                onClick={clearFilters}
+              >
+                Clear
+              </Button>
+            )}
+          </Box>
+        </Box>
+      </Paper>
+
+      {/* Table */}
+      {isLoading ? (
+        <LoadingSkeleton rows={8} columns={5} />
+      ) : (
+        <TableContainer component={Paper}>
+          <Table stickyHeader>
+            <TableHead>
+              <TableRow sx={{ backgroundColor: '#F5F7FA' }}>
+                <TableCell />
+                <TableCell>Timestamp</TableCell>
+                <TableCell>Entity Type</TableCell>
+                <TableCell>Action</TableCell>
+                <TableCell>Event Type</TableCell>
+              </TableRow>
+            </TableHead>
+            <TableBody>
+              {data?.items.map((event) => (
+                <EventRow key={event.id} event={event} />
+              ))}
+              {!data?.items.length && (
+                <TableRow>
+                  <TableCell colSpan={5} align="center">
+                    <EmptyState title="No events found" />
+                  </TableCell>
+                </TableRow>
+              )}
+            </TableBody>
+          </Table>
+        </TableContainer>
       )}
-      {!selectedBook && activeTab === 'book' && (
-        <EmptyState title="Select a book to view events" />
-      )}
 
-      {(selectedParty || selectedBook) && (
-        <>
-          {isLoading ? (
-            <LoadingSkeleton rows={5} columns={5} />
-          ) : (
-            <TableContainer component={Paper}>
-              <Table stickyHeader>
-                <TableHead>
-                  <TableRow sx={{ backgroundColor: '#F5F7FA' }}>
-                    <TableCell />
-                    <TableCell>Timestamp</TableCell>
-                    <TableCell>Entity Type</TableCell>
-                    <TableCell>Action</TableCell>
-                    <TableCell>Event Type</TableCell>
-                  </TableRow>
-                </TableHead>
-                <TableBody>
-                  {currentData?.items.map((event) => (
-                    <EventRow key={event.id} event={event} />
-                  ))}
-                  {!currentData?.items.length && (
-                    <TableRow>
-                      <TableCell colSpan={5} align="center">
-                        <EmptyState title="No events found" />
-                      </TableCell>
-                    </TableRow>
-                  )}
-                </TableBody>
-              </Table>
-            </TableContainer>
-          )}
-
-          {currentData && currentData.totalCount > 0 && (
-            <Pagination
-              count={currentData.totalCount}
-              page={page}
-              pageSize={pageSize}
-              onPageChange={setPage}
-              onPageSizeChange={setPageSize}
-            />
-          )}
-        </>
+      {data && data.totalCount > 0 && (
+        <Pagination
+          count={data.totalCount}
+          page={page}
+          pageSize={pageSize}
+          onPageChange={setPage}
+          onPageSizeChange={setPageSize}
+        />
       )}
     </Box>
   )

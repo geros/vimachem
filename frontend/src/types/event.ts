@@ -1,3 +1,11 @@
+export interface EventFilter {
+  entityType?: string
+  action?: string
+  entityId?: string
+  from?: string
+  to?: string
+}
+
 export interface LibraryEvent {
   id: string
   eventType: string

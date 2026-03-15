@@ -26,6 +26,14 @@ public sealed class EventRepository : IEventRepository {
 			Builders<DomainEvent>.IndexKeys.Ascending(e => e.EntityId)));
 		_events.Indexes.CreateOne(new CreateIndexModel<DomainEvent>(
 			Builders<DomainEvent>.IndexKeys.Ascending(e => e.EntityType)));
+		_events.Indexes.CreateOne(new CreateIndexModel<DomainEvent>(
+			Builders<DomainEvent>.IndexKeys.Ascending(e => e.Action)));
+		_events.Indexes.CreateOne(new CreateIndexModel<DomainEvent>(
+			Builders<DomainEvent>.IndexKeys
+				.Ascending(e => e.EntityType)
+				.Ascending(e => e.Action)
+				.Descending(e => e.Timestamp),
+			new CreateIndexOptions { Name = "entity_type_action_ts" }));
 	}
 
 	public async Task SaveEventAsync(DomainEvent @event, CancellationToken ct = default) {
@@ -62,6 +70,25 @@ public sealed class EventRepository : IEventRepository {
 		);
 
 		return await ExecutePagedQueryAsync(filter, page, pageSize, ct);
+	}
+
+	public async Task<PagedResponse<EventResponse>> GetAllEventsAsync(
+		EventFilter filter, int page, int pageSize, CancellationToken ct) {
+
+		var fd = Builders<DomainEvent>.Filter.Empty;
+
+		if (!string.IsNullOrEmpty(filter.EntityType))
+			fd &= Builders<DomainEvent>.Filter.Eq(e => e.EntityType, filter.EntityType);
+		if (!string.IsNullOrEmpty(filter.Action))
+			fd &= Builders<DomainEvent>.Filter.Eq(e => e.Action, filter.Action);
+		if (!string.IsNullOrEmpty(filter.EntityId))
+			fd &= Builders<DomainEvent>.Filter.Eq(e => e.EntityId, filter.EntityId);
+		if (filter.From.HasValue)
+			fd &= Builders<DomainEvent>.Filter.Gte(e => e.Timestamp, filter.From.Value);
+		if (filter.To.HasValue)
+			fd &= Builders<DomainEvent>.Filter.Lte(e => e.Timestamp, filter.To.Value);
+
+		return await ExecutePagedQueryAsync(fd, page, pageSize, ct);
 	}
 
 	private async Task<PagedResponse<EventResponse>> ExecutePagedQueryAsync(
