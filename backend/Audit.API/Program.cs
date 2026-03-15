@@ -27,6 +27,9 @@ builder.Services.AddSwaggerGen(c => {
 
 var app = builder.Build();
 
+// Seed initial audit events
+await DataSeeder.SeedAsync(mongoDatabase);
+
 app.UseSwagger();
 app.UseSwaggerUI();
 app.MapControllers();

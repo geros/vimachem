@@ -53,10 +53,11 @@ app.UseHttpsRedirection();
 app.UseAuthorization();
 app.MapControllers();
 
-// Ensure database is created
+// Ensure database is created and seeded
 using (var scope = app.Services.CreateScope()) {
 	var db = scope.ServiceProvider.GetRequiredService<LendingDbContext>();
 	db.Database.EnsureCreated();
+	await DataSeeder.SeedAsync(db);
 }
 
 app.Run();
