@@ -37,8 +37,6 @@ const getDaysBorrowed = (borrowedAt: string) => {
   return days
 }
 
-const isOverdue = (borrowedAt: string) => getDaysBorrowed(borrowedAt) > 14
-
 const BorrowingOverview: React.FC = () => {
   const [viewMode, setViewMode] = useState<ViewMode>('grouped')
   const [dialogOpen, setDialogOpen] = useState(false)
@@ -151,9 +149,6 @@ const BorrowingOverview: React.FC = () => {
                     color="primary"
                     size="small"
                   />
-                  {book.borrowers.some((b) => isOverdue(b.borrowedAt)) && (
-                    <Chip label="Overdue" color="error" size="small" />
-                  )}
                 </Box>
               </AccordionSummary>
               <AccordionDetails sx={{ p: 0 }}>
@@ -169,21 +164,14 @@ const BorrowingOverview: React.FC = () => {
                   <TableBody>
                     {book.borrowers.map((borrower) => {
                       const days = getDaysBorrowed(borrower.borrowedAt)
-                      const overdue = isOverdue(borrower.borrowedAt)
                       return (
-                        <TableRow
-                          key={borrower.customerId}
-                          sx={overdue ? { backgroundColor: '#FFF5F5' } : undefined}
-                        >
+                        <TableRow key={borrower.customerId}>
                           <TableCell>{borrower.customerName}</TableCell>
                           <TableCell>
                             {new Date(borrower.borrowedAt).toLocaleDateString()}
                           </TableCell>
                           <TableCell>
-                            <Typography
-                              variant="body2"
-                              sx={{ color: overdue ? '#DC3545' : 'inherit', fontWeight: overdue ? 600 : 400 }}
-                            >
+                            <Typography variant="body2">
                               {days} day{days !== 1 ? 's' : ''}
                             </Typography>
                           </TableCell>
@@ -228,20 +216,13 @@ const BorrowingOverview: React.FC = () => {
             <TableBody>
               {filteredFlat.map((borrowing, index) => {
                 const days = getDaysBorrowed(borrowing.borrowedAt)
-                const overdue = isOverdue(borrowing.borrowedAt)
                 return (
-                  <TableRow
-                    key={`${borrowing.bookId}-${borrowing.customerId}-${index}`}
-                    sx={overdue ? { backgroundColor: '#FFF5F5' } : undefined}
-                  >
+                  <TableRow key={`${borrowing.bookId}-${borrowing.customerId}-${index}`}>
                     <TableCell>{borrowing.bookTitle}</TableCell>
                     <TableCell>{borrowing.customerName}</TableCell>
                     <TableCell>{new Date(borrowing.borrowedAt).toLocaleDateString()}</TableCell>
                     <TableCell>
-                      <Typography
-                        variant="body2"
-                        sx={{ color: overdue ? '#DC3545' : 'inherit', fontWeight: overdue ? 600 : 400 }}
-                      >
+                      <Typography variant="body2">
                         {days}d
                       </Typography>
                     </TableCell>
