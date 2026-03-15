@@ -1,19 +1,31 @@
 using MongoDB.Driver;
 using Audit.API.Domain;
+using Microsoft.Extensions.Configuration;
 
 namespace Audit.API.Infrastructure;
 
 public sealed class EventRetentionJob : BackgroundService {
 	private readonly IServiceProvider _serviceProvider;
 	private readonly ILogger<EventRetentionJob> _logger;
-	private readonly TimeSpan _interval = TimeSpan.FromHours(24);
-	private readonly TimeSpan _retention = TimeSpan.FromDays(365);
+	private readonly TimeSpan _interval;
+	private readonly TimeSpan _retention;
 
 	public EventRetentionJob(
 		IServiceProvider serviceProvider,
-		ILogger<EventRetentionJob> logger) {
+		ILogger<EventRetentionJob> logger,
+		IConfiguration configuration) {
 		_serviceProvider = serviceProvider;
 		_logger = logger;
+
+		var intervalMinutes = configuration.GetValue<int?>("Retention:RunIntervalMinutes") ?? 1440; // default 24h
+		var retentionDays = configuration.GetValue<int?>("Retention:RetentionDays") ?? 365; // default 1 year
+
+		_interval = TimeSpan.FromMinutes(intervalMinutes);
+		_retention = TimeSpan.FromDays(retentionDays);
+
+		_logger.LogInformation(
+			"Event retention job configured: interval={Interval}, retention={Retention}",
+			_interval, _retention);
 	}
 
 	protected override async Task ExecuteAsync(CancellationToken stoppingToken) {
