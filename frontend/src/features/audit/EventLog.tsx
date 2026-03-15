@@ -91,7 +91,7 @@ const EventRow: React.FC<EventRowProps> = ({ event }) => {
                   <Typography variant="body2">{new Date(event.timestamp).toLocaleString()}</Typography>
                 </Box>
               </Box>
-              {event.payload && (
+              {event.payload !== undefined && event.payload !== null && (
                 <>
                   <Typography variant="caption" color="textSecondary" display="block" sx={{ mb: 0.5 }}>
                     Payload
