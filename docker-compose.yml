@@ -154,6 +154,17 @@ services:
       - audit-api
     restart: unless-stopped
 
+  # Documentation
+  docs:
+    build:
+      context: ./docs
+      dockerfile: Dockerfile
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./docs:/docs
+    restart: unless-stopped
+
 volumes:
   postgres_data:
   mongo_data:

@@ -1,0 +1,87 @@
+site_name: Library Management System
+site_description: A microservices-based Library Management System built with .NET, PostgreSQL, MongoDB, and RabbitMQ
+site_author: Vimachem
+site_url: https://library-management.docs
+
+theme:
+  name: material
+  palette:
+    - scheme: default
+      primary: indigo
+      accent: indigo
+      toggle:
+        icon: material/brightness-7
+        name: Switch to dark mode
+    - scheme: slate
+      primary: indigo
+      accent: indigo
+      toggle:
+        icon: material/brightness-4
+        name: Switch to light mode
+  features:
+    - navigation.tabs
+    - navigation.sections
+    - navigation.expand
+    - navigation.top
+    - search.suggest
+    - search.highlight
+    - content.code.copy
+    - content.code.annotate
+
+plugins:
+  - search
+  - minify:
+      minify_html: true
+
+markdown_extensions:
+  - pymdownx.highlight:
+      anchor_linenums: true
+      line_spans: __span
+      pygments_lang_class: true
+  - pymdownx.inlinehilite
+  - pymdownx.snippets
+  - pymdownx.superfences:
+      custom_fences:
+        - name: mermaid
+          class: mermaid
+          format: !!python/name:pymdownx.superfences.fence_code_format
+  - pymdownx.tabbed:
+      alternate_style: true
+  - pymdownx.details
+  - pymdownx.mark
+  - admonition
+  - tables
+  - toc:
+      permalink: true
+
+nav:
+  - Home: index.md
+  - Setup:
+    - setup/index.md
+    - setup/prerequisites.md
+    - setup/local-development.md
+    - setup/docker-setup.md
+  - Architecture:
+    - architecture/index.md
+    - architecture/services.md
+    - architecture/event-driven.md
+    - architecture/database.md
+  - API Reference:
+    - api/index.md
+    - api/party-api.md
+    - api/catalog-api.md
+    - api/lending-api.md
+    - api/audit-api.md
+  - Assignment:
+    - assignment/index.md
+    - assignment/requirements.md
+    - assignment/implementation.md
+
+extra:
+  social:
+    - icon: fontawesome/brands/github
+      link: https://github.com
+  version:
+    provider: mike
+
+copyright: Copyright &copy; 2026 Vimachem
