@@ -39,15 +39,7 @@ public sealed class RabbitMqEventPublisher : IEventPublisher, IDisposable {
 	}
 
 	public async Task PublishAsync(IntegrationEvent @event, CancellationToken ct) {
-		var routingKey = @event.EventType.ToLowerInvariant().Replace("party", "party").Replace("role", "role");
-		routingKey = routingKey switch {
-			"PartyCreated" => "party.created",
-			"PartyUpdated" => "party.updated",
-			"PartyDeleted" => "party.deleted",
-			"RoleAssigned" => "party.role_assigned",
-			"RoleRemoved" => "party.role_removed",
-			_ => routingKey
-		};
+		var routingKey = $"{@event.EntityType.ToLowerInvariant()}.{@event.Action.ToLowerInvariant()}";
 
 		var body = JsonSerializer.SerializeToUtf8Bytes(@event);
 
