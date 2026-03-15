@@ -76,6 +76,8 @@ docker-compose down
 docker-compose down -v
 ```
 
+**Initial Data:** On first startup, services automatically seed sample data including 54 parties (authors and customers), 100 books across 8 categories, 200 borrowing records, and corresponding audit events. No manual setup is required.
+
 On Linux/Mac you can also use the convenience scripts:
 
 ```bash
@@ -145,9 +147,14 @@ make clean
 | GET | /api/catalog/books/{id}/availability | Check availability |
 | POST | /api/catalog/books | Create book |
 | PUT | /api/catalog/books/{id} | Update book |
+| DELETE | /api/catalog/books/{id} | Delete book |
 | PUT | /api/catalog/books/{id}/reserve | Reserve copy (internal) |
 | PUT | /api/catalog/books/{id}/release | Release copy (internal) |
 | GET | /api/catalog/categories | List categories |
+| GET | /api/catalog/categories/{id} | Get category |
+| POST | /api/catalog/categories | Create category |
+| PUT | /api/catalog/categories/{id} | Update category |
+| DELETE | /api/catalog/categories/{id} | Delete category |
 
 ### Lending.API (Port 5300)
 
@@ -163,6 +170,7 @@ make clean
 
 | Method | Endpoint | Description |
 |--------|----------|-------------|
+| GET | /api/events | Query events with filters (paginated) |
 | GET | /api/events/parties/{partyId} | Events for party (paginated) |
 | GET | /api/events/books/{bookId} | Events for book (paginated) |
 
@@ -211,6 +219,14 @@ make clean
 **Decision:** Dual approach — MongoDB TTL index for auto-delete AND explicit BackgroundService cleanup.
 
 **Rationale:** Belt-and-suspenders. TTL index checks every ~60 seconds. Background job runs daily for guaranteed coverage.
+
+### 7. RabbitMQ Retry with Dead-Letter Queue
+
+**Decision:** Consumer retries failed messages up to 3 times, then routes to a dead-letter queue.
+
+**Rationale:** Assignment requires retry and error-handling for message processing. Retry with exponential re-publish handles transient failures. DLQ captures poison messages for investigation without blocking the main queue.
+
+**Trade-off:** Messages in the DLQ require manual inspection. In production, would add a DLQ consumer with alerting.
 
 ## Project Structure
 
@@ -264,9 +280,15 @@ All services publish events to RabbitMQ (`library.events` exchange):
 |---------|-------|-------------|
 | Party.API | PartyCreated | party.created |
 | Party.API | PartyUpdated | party.updated |
-| Party.API | RoleAssigned | party.role_assigned |
+| Party.API | PartyDeleted | party.deleted |
+| Party.API | RoleAssigned | party.roleassigned |
+| Party.API | RoleRemoved | party.roleremoved |
 | Catalog.API | BookCreated | book.created |
 | Catalog.API | BookUpdated | book.updated |
+| Catalog.API | BookDeleted | book.deleted |
+| Catalog.API | CategoryCreated | category.created |
+| Catalog.API | CategoryUpdated | category.updated |
+| Catalog.API | CategoryDeleted | category.deleted |
 | Lending.API | BookBorrowed | borrowing.borrowed |
 | Lending.API | BookReturned | borrowing.returned |
 
