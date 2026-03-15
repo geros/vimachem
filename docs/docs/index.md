@@ -13,41 +13,12 @@ The Library Management System is a distributed application composed of four micr
 
 ## Quick Links
 
-<div class="grid cards" markdown>
-
--   :material-rocket-launch: __Getting Started__
-
-    ---
-
-    Set up the project locally or with Docker
-
-    [:octicons-arrow-right-24: Setup Guide](setup/index.md)
-
--   :material-diagram: __Architecture__
-
-    ---
-
-    Learn about the microservices architecture and design decisions
-
-    [:octicons-arrow-right-24: Architecture Overview](architecture/index.md)
-
--   :material-api: __API Reference__
-
-    ---
-
-    Explore the REST API endpoints for each service
-
-    [:octicons-arrow-right-24: API Documentation](api/index.md)
-
--   :material-book-open: __Assignment__
-
-    ---
-
-    View the original assignment requirements and implementation details
-
-    [:octicons-arrow-right-24: Assignment Details](assignment/index.md)
-
-</div>
+| | |
+|:---|:---|
+| **[Getting Started](setup/index.md)** | Set up the project locally or with Docker |
+| **[Architecture](architecture/index.md)** | Learn about the microservices architecture and design decisions |
+| **[API Reference](api/index.md)** | Explore the REST API endpoints for each service |
+| **[Assignment](assignment/index.md)** | View the original assignment requirements and implementation details |
 
 ## Technology Stack
 
@@ -104,14 +75,15 @@ flowchart TB
 
 ## Service Ports
 
-| Service | Port | Swagger URL |
-|---------|------|-------------|
+| Service | Port | URL |
+|---------|------|-----|
 | Party.API | 5100 | http://localhost:5100/swagger |
 | Catalog.API | 5200 | http://localhost:5200/swagger |
 | Lending.API | 5300 | http://localhost:5300/swagger |
 | Audit.API | 5400 | http://localhost:5400/swagger |
-| RabbitMQ Management | 15672 | http://localhost:15672 |
 | Frontend | 4200 | http://localhost:4200 |
+| Documentation | 8000 | http://localhost:8000 |
+| RabbitMQ Management | 15672 | http://localhost:15672 |
 
 ## Getting Started
 
