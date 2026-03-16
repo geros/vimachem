@@ -19,6 +19,7 @@ case "${1:-}" in
     echo ""
     echo -e "${GREEN}✓ All services started!${NC}"
     echo ""
+    echo -e "  ${BLUE}Frontend:${NC}         http://localhost:4200"
     echo -e "  ${BLUE}Party.API:${NC}        http://localhost:5100/swagger"
     echo -e "  ${BLUE}Catalog.API:${NC}      http://localhost:5200/swagger"
     echo -e "  ${BLUE}Lending.API:${NC}      http://localhost:5300/swagger"
@@ -127,6 +128,10 @@ case "${1:-}" in
   smoke)
     echo -e "${BLUE}Running smoke test...${NC}"
     echo ""
+
+    echo -n "  Frontend... "
+    curl -sf http://localhost:4200 > /dev/null 2>&1 && \
+      echo -e "${GREEN}✓${NC}" || echo -e "${RED}✕${NC}"
 
     echo -n "  Party.API health... "
     curl -sf http://localhost:5100/swagger/index.html > /dev/null 2>&1 && \

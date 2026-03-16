@@ -1,6 +1,6 @@
 # Library Management System
 
-A microservices-based Library Management System built with .NET 10, PostgreSQL, MongoDB, and RabbitMQ.
+A microservices-based Library Management System built with .NET 10, PostgreSQL, MongoDB, RabbitMQ, and a **React (TypeScript) frontend**.
 
 ## Architecture Overview
 
@@ -9,7 +9,7 @@ A microservices-based Library Management System built with .NET 10, PostgreSQL, 
 │                              Docker Compose                                   │
 │                                                                               │
 │  ┌──────────────┐                                                             │
-│  │  Frontend     │  (Angular - not implemented in this phase)                │
+│  │  Frontend     │  React 19 + TypeScript + Material UI                      │
 │  │  :4200        │                                                            │
 │  └──────┬───────┘                                                             │
 │         │ HTTP                                                                │
@@ -44,6 +44,7 @@ A microservices-based Library Management System built with .NET 10, PostgreSQL, 
 | **Catalog.API** | 5200 | PostgreSQL (catalog_db) | Manages books and categories; validates authors via Party.API |
 | **Lending.API** | 5300 | PostgreSQL (lending_db) | Orchestrates borrow/return flows; calls Party.API and Catalog.API |
 | **Audit.API** | 5400 | MongoDB (library_audit) | Event store and query service; consumes all events from RabbitMQ |
+| **Frontend** | 4200 | — | React SPA for managing parties, books, borrowings, and audit events |
 
 ## Technology Stack
 
@@ -55,6 +56,9 @@ A microservices-based Library Management System built with .NET 10, PostgreSQL, 
 - **FluentValidation** - Input validation
 - **Polly** - Resilience patterns (retry, circuit breaker)
 - **xUnit** - Testing framework
+- **React 19** - Frontend SPA (TypeScript, Vite, Material UI)
+- **TanStack Query** - Server state management
+- **React Router** - Client-side routing
 
 ## Quick Start
 
@@ -62,6 +66,7 @@ A microservices-based Library Management System built with .NET 10, PostgreSQL, 
 
 - Docker and Docker Compose
 - .NET 10 SDK (for local development)
+- Node.js 22+ (for frontend development)
 
 ### Run with Docker Compose
 
@@ -87,6 +92,7 @@ make clean       # Stop and remove volumes
 ```
 
 Services will be available at:
+- **Frontend: http://localhost:4200**
 - Party.API: http://localhost:5100/swagger
 - Catalog.API: http://localhost:5200/swagger
 - Lending.API: http://localhost:5300/swagger
@@ -232,6 +238,13 @@ make clean
 
 ```
 src/
+├── frontend/                # React SPA (TypeScript + Vite + MUI)
+│   ├── src/
+│   │   ├── components/      # Shared UI components
+│   │   ├── pages/           # Route pages (Parties, Books, Borrowings, Audit)
+│   │   ├── services/        # API clients (Axios)
+│   │   └── types/           # TypeScript interfaces
+│   └── Dockerfile
 ├── Party.API/
 │   ├── Domain/              # Entities, Exceptions
 │   ├── Application/         # DTOs, Services, Validators
