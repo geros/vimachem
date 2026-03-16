@@ -83,12 +83,12 @@ docker-compose down -v
 
 **Initial Data:** On first startup, services automatically seed sample data including 54 parties (authors and customers), 100 books across 8 categories, 200 borrowing records, and corresponding audit events. No manual setup is required.
 
-On Linux/Mac you can also use the convenience scripts:
+Or use the helper script:
 
 ```bash
-make up          # Start all services
-make down        # Stop all services
-make clean       # Stop and remove volumes
+./scripts/dev.sh up       # Build and start all services
+./scripts/dev.sh down     # Stop all services
+./scripts/dev.sh clean    # Stop and remove all data (volumes)
 ```
 
 Services will be available at:
@@ -110,23 +110,26 @@ dotnet test tests/Lending.API.Tests/
 dotnet test tests/Audit.API.Tests/
 ```
 
-On Linux/Mac: `make test` runs all tests at once.
+Or: `./scripts/dev.sh test`
 
 ## Development Commands
 
 ```bash
-# Start infrastructure only (postgres, mongo, rabbitmq)
-make infra
-
-# View logs
-make logs                    # All services
-make logs SVC=party-api      # Specific service
-
-# Rebuild a service
-make rebuild SVC=lending-api
-
-# Clean everything (including volumes)
-make clean
+./scripts/dev.sh up                    # Build and start all services
+./scripts/dev.sh down                  # Stop all services
+./scripts/dev.sh clean                 # Stop and remove all data (volumes)
+./scripts/dev.sh restart               # Restart all services
+./scripts/dev.sh restart lending-api   # Restart a specific service
+./scripts/dev.sh rebuild               # Rebuild and restart all services
+./scripts/dev.sh rebuild party-api     # Rebuild a specific service
+./scripts/dev.sh logs                  # Follow logs for all services
+./scripts/dev.sh logs lending-api      # Follow logs for a specific service
+./scripts/dev.sh status                # Show service status
+./scripts/dev.sh infra                 # Start infrastructure only (postgres, mongo, rabbitmq)
+./scripts/dev.sh test                  # Run all unit tests
+./scripts/dev.sh smoke                 # Quick health check all endpoints
+./scripts/dev.sh seed-check            # Verify seed data in databases
+./scripts/dev.sh migrate               # Apply EF Core migrations (local)
 ```
 
 ## API Endpoints
