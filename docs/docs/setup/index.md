@@ -23,11 +23,11 @@ Before you begin, ensure you have the following installed:
 The fastest way to get the system running:
 
 ```bash
-# Start all services
-make up
-
-# Or using the script
+# Start all services (Linux/macOS)
 ./scripts/dev.sh up
+
+# Or on any OS
+docker compose up -d --build
 ```
 
 This will start:

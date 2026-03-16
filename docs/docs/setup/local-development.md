@@ -16,10 +16,10 @@ This setup provides fast iteration cycles and full debugging capabilities.
 First, start only the infrastructure services using Docker Compose:
 
 ```bash
-# Using the Makefile
-make infra
+# Using the helper script (Linux/macOS)
+./scripts/dev.sh infra
 
-# Or directly with Docker Compose
+# Or directly with Docker Compose (any OS)
 docker compose up -d postgres mongo rabbitmq
 ```
 
@@ -152,10 +152,10 @@ VITE_API_AUDIT_URL=http://localhost:5400
 ### Unit Tests
 
 ```bash
-# Run all tests
-make test
+# Run all tests (Linux/macOS)
+./scripts/dev.sh test
 
-# Or individually
+# Or individually (any OS)
 dotnet test tests/Party.API.Tests/
 dotnet test tests/Catalog.API.Tests/
 dotnet test tests/Lending.API.Tests/
@@ -165,13 +165,7 @@ dotnet test tests/Audit.API.Tests/
 ### Smoke Tests
 
 ```bash
-make smoke
-```
-
-### E2E Tests
-
-```bash
-make e2e
+./scripts/dev.sh smoke
 ```
 
 ## Debugging
@@ -269,15 +263,14 @@ curl -u guest:guest http://localhost:15672/api/overview
 To start fresh:
 
 ```bash
-# Stop everything
-make clean
+# Stop everything and remove volumes (Linux/macOS)
+./scripts/dev.sh clean
 
-# Or manually
+# Or manually (any OS)
 docker compose down -v
-docker system prune -f
 
 # Restart infrastructure
-make infra
+./scripts/dev.sh infra
 ```
 
 ## Next Steps

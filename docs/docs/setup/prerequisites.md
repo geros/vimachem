@@ -74,15 +74,6 @@ git --version
 
 ## Optional Tools
 
-### Make
-
-The project includes a Makefile for common tasks. While optional, it simplifies many operations.
-
-**Installation:**
-- **macOS**: Included with Xcode Command Line Tools (`xcode-select --install`)
-- **Linux**: `sudo apt-get install make` or `sudo yum install make`
-- **Windows**: Use Git Bash or install via [Chocolatey](https://chocolatey.org/) (`choco install make`)
-
 ### IDE / Editor
 
 Recommended development environments:
@@ -151,8 +142,6 @@ npm --version
 # Check Git
 git --version
 
-# Check Make
-make --version
 ```
 
 All commands should execute without errors and display version information.

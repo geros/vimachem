@@ -13,10 +13,10 @@ The Docker Compose configuration includes:
 ## Quick Start
 
 ```bash
-# Start all services
-make up
+# Start all services (Linux/macOS)
+./scripts/dev.sh up
 
-# Or directly
+# Or directly (any OS)
 docker compose up -d
 ```
 
@@ -157,12 +157,14 @@ frontend:
 
 ### Start Services
 
+> **Note:** `./scripts/dev.sh` commands require Linux or macOS. On Windows, use the `docker compose` equivalents shown below.
+
 ```bash
 # Start all services
-make up
+./scripts/dev.sh up
 
 # Start only infrastructure
-make infra
+./scripts/dev.sh infra
 
 # Start specific service
 docker compose up -d party-api
@@ -172,11 +174,10 @@ docker compose up -d party-api
 
 ```bash
 # All services
-make logs
+./scripts/dev.sh logs
 
 # Specific service
-make logs SVC=party-api
-docker compose logs -f lending-api
+./scripts/dev.sh logs party-api
 
 # Last 100 lines
 docker compose logs --tail=100
@@ -186,24 +187,20 @@ docker compose logs --tail=100
 
 ```bash
 # Stop all services (keep volumes)
-make down
-docker compose down
+./scripts/dev.sh down
 
 # Stop and remove volumes (data loss!)
-make clean
-docker compose down -v
+./scripts/dev.sh clean
 ```
 
 ### Rebuild Services
 
 ```bash
 # Rebuild and restart specific service
-make rebuild SVC=catalog-api
-docker compose up -d --build catalog-api
+./scripts/dev.sh rebuild catalog-api
 
 # Rebuild all
-make rebuild
-docker compose up -d --build
+./scripts/dev.sh rebuild
 ```
 
 ### Execute Commands

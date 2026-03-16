@@ -94,8 +94,11 @@ The fastest way to get started is using Docker Compose:
 git clone <repository-url>
 cd library-management
 
-# Start all services
-make up
+# Start all services (Linux/macOS)
+./scripts/dev.sh up
+
+# Or on any OS
+docker compose up -d --build
 ```
 
 For detailed setup instructions, see the [Setup Guide](setup/index.md).
@@ -105,10 +108,10 @@ For detailed setup instructions, see the [Setup Guide](setup/index.md).
 ### Running Tests
 
 ```bash
-# Run all tests
-make test
+# Run all tests (Linux/macOS)
+./scripts/dev.sh test
 
-# Run specific service tests
+# Run specific service tests (any OS)
 dotnet test tests/Party.API.Tests/
 dotnet test tests/Catalog.API.Tests/
 dotnet test tests/Lending.API.Tests/
@@ -118,11 +121,8 @@ dotnet test tests/Audit.API.Tests/
 ### Smoke & E2E Tests
 
 ```bash
-# Quick health check
-make smoke
-
-# Full end-to-end flow
-make e2e
+# Quick health check (Linux/macOS)
+./scripts/dev.sh smoke
 ```
 
 ## License

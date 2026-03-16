@@ -83,7 +83,7 @@ docker-compose down -v
 
 **Initial Data:** On first startup, services automatically seed sample data including 54 parties (authors and customers), 100 books across 8 categories, 200 borrowing records, and corresponding audit events. No manual setup is required.
 
-Or use the helper script:
+On Linux/macOS you can also use the helper script:
 
 ```bash
 ./scripts/dev.sh up       # Build and start all services
@@ -110,9 +110,9 @@ dotnet test tests/Lending.API.Tests/
 dotnet test tests/Audit.API.Tests/
 ```
 
-Or: `./scripts/dev.sh test`
+On Linux/macOS: `./scripts/dev.sh test`
 
-## Development Commands
+## Development Commands (Linux/macOS)
 
 ```bash
 ./scripts/dev.sh up                    # Build and start all services
